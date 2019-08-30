@@ -23,7 +23,7 @@ extern "C" fn foo() {
 /// This is the main function called by `init()` function from boot.rs
 #[cfg(not(test))]
 #[no_mangle] // don't mangle the name of this function
-pub extern "C" fn main() -> ! {
+pub extern "C" fn main() {
 	scheduler::init();
 
 	println!("Hello from eduOS-rs!");
@@ -37,7 +37,7 @@ pub extern "C" fn main() -> ! {
 	println!("Shutdown system!");
 
 	// shutdown system
-	// shutdown();
+	shutdown();
 }
 
 /// This function is called on panic.
