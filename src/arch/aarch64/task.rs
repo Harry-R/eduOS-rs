@@ -13,6 +13,7 @@ use scheduler::task::*;
 use scheduler::{do_exit,get_current_taskid};
 use consts::*;
 use logging::*;
+use compiler_builtins::mem::memset;
 
 #[derive(Debug)]
 #[repr(C, packed)]
@@ -120,7 +121,7 @@ impl TaskFrame for Task {
 			memset(state as *mut u8, 0x00, size_of::<State>());
 
 			(*state).sp = (stack as usize + size_of::<State>()) as u64;
-			(*state).rbp = (*state).rsp + size_of::<u64>() as u64;
+			(*state).x29 = (*state).sp + size_of::<u64>() as u64;
 
 			(*state).pc = (func as *const()) as u64;;
 			(*state).rflags = 0x1002u64;
