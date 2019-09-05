@@ -80,12 +80,12 @@ struct State {
 	x29: u64,
 	/// X30 register
 	x30: u64,
-	/// (pseudo) SP register
+	/// (pseudo) SP register,
 	sp: u64,
 	/// Program Counter
 	pc: u64,
 	/// status flags
-	rflags: u64,
+	cpsr: u64,
 }
 
 extern "C" fn leave_task() {
@@ -124,7 +124,8 @@ impl TaskFrame for Task {
 			(*state).x29 = (*state).sp + size_of::<u64>() as u64;
 
 			(*state).pc = (func as *const()) as u64;;
-			(*state).rflags = 0x1002u64;
+			// TODO: Check, if we can use cpsr in the same way as rflags
+			(*state).cpsr = 0x1002u64;
 
 			/* Set the task's stack pointer entry to the stack we have crafted right now. */
 			self.last_stack_pointer =  stack as usize;
