@@ -136,7 +136,7 @@ _start:
           bl      do_irq
           cmp     x0, 0
           b.eq    1f // TODO: check address
-
+         // TODO: why? If needed: Implement task / scheduler functions
           mov x1, sp
           str x1, [x0]                  /* store old sp */
           bl get_current_stack          /* get new sp   */
@@ -264,4 +264,5 @@ _start:
     // jump to Rust code, should not return
     b       init
     // for failsafe, halt this core too
+    // TODO: check address
     b       1b
