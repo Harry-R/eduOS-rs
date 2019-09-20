@@ -13,7 +13,6 @@ use logging::*;
 use scheduler::*;
 
 // TODO enhancement: use aarch64 or cortex-a crate for register stuff
-// TODO: How to deal with nested interrupts?
 
 /* GIC related constants */
 const GICR_BASE: uint = 0;
@@ -105,13 +104,13 @@ fn do_bad_mode(int: reason){
 }
 
 
-// TODO: fix return type -> what to use here?
+// TODO: fix return type -> See eduOS-rs
 fn do_irq() -> size_t** {
 	size_t** ret = NULL;
 	uint32: iar = gicc_read(GICC_IAR);
 	uint32: vector = iar & 0x3ff;
 
-    // TODO: What about logging?
+    // TODO: Implement logging, see HermitCore
 	LOG_INFO("Receive interrupt %d\n", vector);
 
 	// Check if timers have expired that would unblock tasks
@@ -126,7 +125,7 @@ fn do_irq() -> size_t** {
 	return ret;
 }
 
-// TODO: fix param & return type -> what to use here?
+// TODO: fix param & return type -> See eduOS-rs
 fn do_fiq(void *regs) -> size_t**{
 	size_t** ret = NULL;
 	uint32_t iar = gicc_read(GICC_IAR);
@@ -141,7 +140,7 @@ fn do_fiq(void *regs) -> size_t**{
 	}
 
 	// Check if timers have expired that would unblock tasks
-    // TODO: implement this func
+    // TODO: implement this func / check in eduOS / HermitCore
 	check_workqueues_in_irqhandler(vector);
 
 	if ((vector == INT_PPI_NSPHYS_TIMER) || (vector == RESCHED_INT)) {
