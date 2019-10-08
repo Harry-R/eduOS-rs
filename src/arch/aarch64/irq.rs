@@ -18,6 +18,12 @@ use scheduler::*;
 const GICR_BASE: u64 = 0;
 
 /* GIC Distributor interface register offsets that are common to GICv3 & GICv2 */
+const GICD_BASE: i64 = (1 << 39);
+const GICC_BASE: i64 = GICD_BASE + GICD_SIZE;
+const GIC_SIZE: i64 = GICD_SIZE + GICC_SIZE;
+const GICD_SIZE: i64 = 0x010000;
+const GICC_SIZE: i64 = 0x020000;
+
 const GICD_CTLR: i32 = 0x0;
 const GICD_TYPER: i32 = 0x4;
 const GICD_IIDR: i32 = 0x8;
@@ -68,22 +74,22 @@ const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 // TODO: Fix all the asm stuff below
 fn gicd_read(off: u64) -> u32 {
 	let value;
-	unsafe { asm!(volatile("ldar %w0, [%1]" : "=r"(value) : "r"(gicd_base + off) : "memory"))};
+	unsafe { asm!("ldar %w0, [%1]" : "=r"(value) : "r"(GICD_BASE +off as i64) : "memory")};
 	return value;
 }
 
 fn gicd_write(off: u64, value: i32) -> () {
-	unsafe { asm!(volatile("str %w0, [%1]" : : "rZ" (value), "r" (gicd_base + off) : "memory"))};
+	unsafe { asm!("str %w0, [%1]" : : "rZ" (value), "r" (GICD_BASE +off as i64) : "memory")};
 }
 
 fn gicc_read(off: u64) -> u32 {
 	let value;
-	unsafe{asm!(volatile("ldar %w0, [%1]" : "=r"(value) : "r"(gicc_base + off) : "memory"))};
+	unsafe{asm!("ldar %w0, [%1]" : "=r"(value) : "r"(GICC_BASE +off as i64) : "memory")};
 	return value;
 }
 
 fn gicc_write(off: u64, value: i32) {
-	unsafe{asm!(volatile("str %w0, [%1]" : : "rZ" (value), "r" (gicc_base + off) : "memory"))};
+	unsafe{asm!("str %w0, [%1]" : : "rZ" (value), "r" (GICC_BASE +off as i64) : "memory")};
 }
 
 
@@ -140,10 +146,9 @@ fn do_bad_mode(reason: i32){
 	// LOG_ERROR("Receive unhandled exception: %d\n", reason);
 
 	loop {
-		HALT;
+		// HALT;
 	}
 }
-
 
 fn do_irq() -> u16 {
 	let mut ret = 0;
@@ -175,7 +180,7 @@ fn do_fiq(reg_ptr: u64) -> u16{
 
 	//// LOG_INFO("Receive fiq %d\n", vector);
 
-	if vector < MAX_HANDLERS as u32 && irq_routines[vector] {
+	if vector < MAX_HANDLERS as u32 && irq_routines[vector as usize] != 0 {
 		// TODO: fix, if function pointer arr fixed
 		// (irq_routines[vector as usize])(regs);
 	} else if vector != RESCHED_INT as u32 {
@@ -187,13 +192,13 @@ fn do_fiq(reg_ptr: u64) -> u16{
 	// check_workqueues_in_irqhandler(vector);
 
 	// TODO: Why do we do this? We always call scheduler()...
-	/**
+	/*
 	if (vector == INT_PPI_NSPHYS_TIMER) || (vector == RESCHED_INT as u32) {
 		// a timer interrupt may have caused unblocking of tasks
 		ret = scheduler();
 	} else if get_highest_priority() > per_core(current_task).prio {
 		// there's a ready task with higher priority
-	**/
+	*/
 		ret = scheduler();
 	//}
 
