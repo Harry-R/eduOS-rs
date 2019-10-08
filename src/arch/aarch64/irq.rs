@@ -15,88 +15,129 @@ use scheduler::*;
 // TODO enhancement: use aarch64 or cortex-a crate for register stuff
 
 /* GIC related constants */
-const GICR_BASE: uint = 0;
+const GICR_BASE: u64 = 0;
 
 /* GIC Distributor interface register offsets that are common to GICv3 & GICv2 */
-const GICD_CTLR: uint = 0x0;
-const GICD_TYPER: uint = 0x4;
-const GICD_IIDR: uint = 0x8;
-const GICD_IGROUPR: uint = 0x80;
-const GICD_ISENABLER: uint = 0x100;
-const GICD_ICENABLER: uint = 0x180;
-const GICD_ISPENDR: uint = 0x200;
-const GICD_ICPENDR: uint = 0x280;
-const GICD_ISACTIVER: uint = 0x300;
-const GICD_ICACTIVER: uint = 0x380;
-const GICD_IPRIORITYR: uint = 0x400;
-const GICD_ITARGETSR: uint = 0x800;
-const GICD_ICFGR: uint = 0xc00;
-const GICD_NSACR: uint = 0xe00;
-const GICD_SGIR: uint = 0xF00;
+const GICD_CTLR: i32 = 0x0;
+const GICD_TYPER: i32 = 0x4;
+const GICD_IIDR: i32 = 0x8;
+const GICD_IGROUPR: i32 = 0x80;
+const GICD_ISENABLER: i32 = 0x100;
+const GICD_ICENABLER: i32 = 0x180;
+const GICD_ISPENDR: i32 = 0x200;
+const GICD_ICPENDR: i32 = 0x280;
+const GICD_ISACTIVER: i32 = 0x300;
+const GICD_ICACTIVER: i32 = 0x380;
+const GICD_IPRIORITYR: i32 = 0x400;
+const GICD_ITARGETSR: i32 = 0x800;
+const GICD_ICFGR: i32 = 0xc00;
+const GICD_NSACR: i32 = 0xe00;
+const GICD_SGIR: i32 = 0xF00;
 
-const GICD_CTLR_ENABLEGRP0: uint = (1 << 0);
-const GICD_CTLR_ENABLEGRP1: uint = (1 << 1);
+const GICD_CTLR_ENABLEGRP0: i32 = (1 << 0);
+const GICD_CTLR_ENABLEGRP1: i32 = (1 << 1);
 
 /* Physical CPU Interface registers */
-const GICC_CTLR: uint = 0x0;
-const GICC_PMR: uint = 0x4;
-const GICC_BPR: uint = 0x8;
-const GICC_IAR: uint = 0xC;
-const GICC_EOIR: uint = 0x10;
-const GICC_RPR: uint = 0x14;
-const GICC_HPPIR: uint = 0x18;
-const GICC_AHPPIR: uint = 0x28;
-const GICC_IIDR: uint = 0xFC;
-const GICC_DIR: uint = 0x1000;
-const GICC_PRIODROP: uint = GICC_EOIR;
+const GICC_CTLR: i32 = 0x0;
+const GICC_PMR: i32 = 0x4;
+const GICC_BPR: i32 = 0x8;
+const GICC_IAR: i32 = 0xC;
+const GICC_EOIR: i32 = 0x10;
+const GICC_RPR: i32 = 0x14;
+const GICC_HPPIR: i32 = 0x18;
+const GICC_AHPPIR: i32 = 0x28;
+const GICC_IIDR: i32 = 0xFC;
+const GICC_DIR: i32 = 0x1000;
+const GICC_PRIODROP: i32 = GICC_EOIR;
 
-const GICC_CTLR_ENABLEGRP0: uint = (1 << 0);
-const GICC_CTLR_ENABLEGRP1: uint = (1 << 1);
-const GICC_CTLR_FIQEN: uint = (1 << 3);
-const GICC_CTLR_ACKCTL: uint = (1 << 2);
+const GICC_CTLR_ENABLEGRP0: i32 = (1 << 0);
+const GICC_CTLR_ENABLEGRP1: i32 = (1 << 1);
+const GICC_CTLR_FIQEN: i32 = (1 << 3);
+const GICC_CTLR_ACKCTL: i32 = (1 << 2);
 
-const MAX_HANDLERS: uint = 256;
-const RESCHED_INT: uint = 1;
+const MAX_HANDLERS: i32 = 256;
+const RESCHED_INT: i32 = 1;
 
-/// Maximum possible number of interrupts
+// TODO: find out, what "EINVAL" is
+const EINVAL: i32 = 42;
+
+// TODO: This is dummy, has to be code pointer array -> How to deal with it in Rust?
+const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
 
-fn gicd_read(uint64: off) -> uint32 {
-	uint32: value;
+// TODO: Fix all the asm stuff below
+fn gicd_read(off: u64) -> u32 {
+	let value;
 	unsafe { asm!(volatile("ldar %w0, [%1]" : "=r"(value) : "r"(gicd_base + off) : "memory"))};
 	return value;
 }
 
-fn gicd_write(uint64: off, uint32: value) -> () {
+fn gicd_write(off: u64, value: i32) -> () {
 	unsafe { asm!(volatile("str %w0, [%1]" : : "rZ" (value), "r" (gicd_base + off) : "memory"))};
 }
 
-fn gicc_read(uint64: off) -> uint32 {
-	uint32: value;
+fn gicc_read(off: u64) -> u32 {
+	let value;
 	unsafe{asm!(volatile("ldar %w0, [%1]" : "=r"(value) : "r"(gicc_base + off) : "memory"))};
 	return value;
 }
 
-fn gicc_write(uint64: off, uint32: value) {
+fn gicc_write(off: u64, value: i32) {
 	unsafe{asm!(volatile("str %w0, [%1]" : : "rZ" (value), "r" (gicc_base + off) : "memory"))};
+}
+
+
+fn unmask_interrupt(vector: u32) -> i32{
+    if vector >= (((gicd_read(GICD_TYPER as u64) & 0x1f) + 1) * 32) {
+		return -EINVAL;
+	}
+	// TODO: Check necessity of spinlock
+    // spinlock_irqsave_lock(&mask_lock);
+    gic_set_enable(vector, true);
+    // spinlock_irqsave_unlock(&mask_lock);
+
+    return 0;
+}
+
+fn mask_interrupt(vector: u32) -> i32 {
+    if vector >= (((gicd_read(GICD_TYPER as u64) & 0x1f) + 1) * 32) {
+		return -EINVAL;
+	}
+	// TODO: Check necessity of spinlock
+    // spinlock_irqsave_lock(&mask_lock);
+    gic_set_enable(vector, false);
+    // spinlock_irqsave_unlock(&mask_lock);
+
+    return 0;
+}
+
+
+fn gic_set_enable(vector: u32, enable: bool) {
+    if enable {
+        let regoff: u64 = (GICD_ISENABLER + (4 * (vector / 32) as i32)) as u64;
+        gicd_write(regoff, (gicd_read(regoff) | (1 << (vector % 32))) as i32);
+    } else {
+        let regoff :u64 = (GICD_ICENABLER + (4 * (vector / 32) as i32)) as u64;;
+        gicd_write(regoff, (gicd_read(regoff) | (1 << (vector % 32))) as i32);
+    }
 }
 
 /// Enable Interrupts
 pub fn irq_enable() {
     // Global enable signalling of interrupt from the cpu interface
-	gicc_write(GICC_CTLR, GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL);
+	gicc_write(GICC_CTLR as u64, GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL);
 }
 
 /// Disable Interrupts
 pub fn irq_disable() {
 	// Global disable signalling of interrupt from the cpu interface
-	gicc_write(GICC_CTLR, 0);
+	gicc_write(GICC_CTLR as u64, 0);
 }
 
 
 /// Called at unhandled exception
-fn do_bad_mode(int: reason){
-	LOG_ERROR("Receive unhandled exception: %d\n", reason);
+fn do_bad_mode(reason: i32){
+	// LOG_ERROR("Receive unhandled exception: %d\n", reason);
 
 	loop {
 		HALT;
@@ -104,54 +145,65 @@ fn do_bad_mode(int: reason){
 }
 
 
-// TODO: fix return type -> See eduOS-rs
-fn do_irq() -> size_t** {
-	size_t** ret = NULL;
-	uint32: iar = gicc_read(GICC_IAR);
-	uint32: vector = iar & 0x3ff;
+fn do_irq() -> u16 {
+	let mut ret = 0;
+	let iar = gicc_read( GICC_IAR as u64);
+	let vector = iar & 0x3ff;
 
-    // TODO: Implement logging, see HermitCore
-	LOG_INFO("Receive interrupt %d\n", vector);
+    // TODO: nice to have: Implement logging, see HermitCore
+	// LOG_INFO("Receive interrupt %d\n", vector);
 
 	// Check if timers have expired that would unblock tasks
-	check_workqueues_in_irqhandler(vector);
+	// TODO: Do we need timers?
+	// check_workqueues_in_irqhandler(vector);
 
     // TODO: implement according scheduler functions / check, how this is implemented in eduos
-	if (get_highest_priority() > per_core(current_task)->prio) {
+	// Look for highest priority task and return it's stack pointer,
+	// if (get_highest_priority() > per_core(current_task)->prio) {
 		// there's a ready task with higher priority
 		ret = scheduler();
-	}
-	gicc_write(GICC_EOIR, iar);
+	// 	}
+	gicc_write(GICC_EOIR as u64, iar as i32);
 	return ret;
 }
 
 // TODO: fix param & return type -> See eduOS-rs
-fn do_fiq(void *regs) -> size_t**{
-	size_t** ret = NULL;
-	uint32_t iar = gicc_read(GICC_IAR);
-	uint32_t vector = iar & 0x3ff;
+fn do_fiq(reg_ptr: u64) -> u16{
+	let mut ret = 0;
+	let iar = gicc_read(GICC_IAR as u64);
+	let vector = iar & 0x3ff;
 
-	//LOG_INFO("Receive fiq %d\n", vector);
+	//// LOG_INFO("Receive fiq %d\n", vector);
 
-	if (vector < MAX_HANDLERS && irq_routines[vector]) {
-		(irq_routines[vector])(regs);
-	} else if (vector != RESCHED_INT) {
-		LOG_INFO("Unable to handle fiq %d\n", vector);
+	if vector < MAX_HANDLERS as u32 && irq_routines[vector] {
+		// TODO: fix, if function pointer arr fixed
+		// (irq_routines[vector as usize])(regs);
+	} else if vector != RESCHED_INT as u32 {
+		// LOG_INFO("Unable to handle fiq %d\n", vector);
 	}
 
 	// Check if timers have expired that would unblock tasks
-    // TODO: implement this func / check in eduOS / HermitCore
-	check_workqueues_in_irqhandler(vector);
+    // TODO: Do we need timers?
+	// check_workqueues_in_irqhandler(vector);
 
-	if ((vector == INT_PPI_NSPHYS_TIMER) || (vector == RESCHED_INT)) {
+	// TODO: Why do we do this? We always call scheduler()...
+	/**
+	if (vector == INT_PPI_NSPHYS_TIMER) || (vector == RESCHED_INT as u32) {
 		// a timer interrupt may have caused unblocking of tasks
 		ret = scheduler();
-	} else if (get_highest_priority() > per_core(current_task)->prio) {
+	} else if get_highest_priority() > per_core(current_task).prio {
 		// there's a ready task with higher priority
+	**/
 		ret = scheduler();
-	}
+	//}
 
-	gicc_write(GICC_EOIR, iar);
+	gicc_write(GICC_EOIR as u64, iar as i32);
 
 	return ret;
+}
+
+/// dummy scheduler fun
+// TODO: connect to real scheduler
+fn scheduler() -> u16 {
+	return 42;
 }
