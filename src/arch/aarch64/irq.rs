@@ -67,7 +67,8 @@ const RESCHED_INT: i32 = 1;
 // TODO: find out, what "EINVAL" is
 const EINVAL: i32 = 42;
 
-// TODO: This is dummy, has to be code pointer array -> How to deal with it in Rust?
+// This is dummy, has to be code pointer array -> Ignore first, maybe implement later,
+// if wee need more than one handler
 const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
 
@@ -97,7 +98,7 @@ fn unmask_interrupt(vector: u32) -> i32{
     if vector >= (((gicd_read(GICD_TYPER as u64) & 0x1f) + 1) * 32) {
 		return -EINVAL;
 	}
-	// TODO: Check necessity of spinlock
+	// TODO: Implement with spin crate
     // spinlock_irqsave_lock(&mask_lock);
     gic_set_enable(vector, true);
     // spinlock_irqsave_unlock(&mask_lock);
@@ -109,7 +110,7 @@ fn mask_interrupt(vector: u32) -> i32 {
     if vector >= (((gicd_read(GICD_TYPER as u64) & 0x1f) + 1) * 32) {
 		return -EINVAL;
 	}
-	// TODO: Check necessity of spinlock
+	// TODO: Implement with spin crate
     // spinlock_irqsave_lock(&mask_lock);
     gic_set_enable(vector, false);
     // spinlock_irqsave_unlock(&mask_lock);
@@ -159,10 +160,10 @@ fn do_irq() -> u16 {
 	// LOG_INFO("Receive interrupt %d\n", vector);
 
 	// Check if timers have expired that would unblock tasks
-	// TODO: Do we need timers?
+	// Maybe implement later
 	// check_workqueues_in_irqhandler(vector);
 
-    // TODO: implement according scheduler functions / check, how this is implemented in eduos
+    // implement later, for now it is enough to call scheduler in every case
 	// Look for highest priority task and return it's stack pointer,
 	// if (get_highest_priority() > per_core(current_task)->prio) {
 		// there's a ready task with higher priority
@@ -172,7 +173,6 @@ fn do_irq() -> u16 {
 	return ret;
 }
 
-// TODO: fix param & return type -> See eduOS-rs
 fn do_fiq(reg_ptr: u64) -> u16{
 	let mut ret = 0;
 	let iar = gicc_read(GICC_IAR as u64);
@@ -181,17 +181,17 @@ fn do_fiq(reg_ptr: u64) -> u16{
 	//// LOG_INFO("Receive fiq %d\n", vector);
 
 	if vector < MAX_HANDLERS as u32 && irq_routines[vector as usize] != 0 {
-		// TODO: fix, if function pointer arr fixed
+		// implement later, if real irq handlers are needed
 		// (irq_routines[vector as usize])(regs);
 	} else if vector != RESCHED_INT as u32 {
 		// LOG_INFO("Unable to handle fiq %d\n", vector);
 	}
 
 	// Check if timers have expired that would unblock tasks
-    // TODO: Do we need timers?
+    // Ignore first, maybe implement later
 	// check_workqueues_in_irqhandler(vector);
 
-	// TODO: Why do we do this? We always call scheduler()...
+	// implement later, for now it is enough to call scheduler in every case
 	/*
 	if (vector == INT_PPI_NSPHYS_TIMER) || (vector == RESCHED_INT as u32) {
 		// a timer interrupt may have caused unblocking of tasks
