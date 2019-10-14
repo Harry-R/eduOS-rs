@@ -72,25 +72,24 @@ const EINVAL: i32 = 42;
 const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
 
-// TODO: Fix all the asm stuff below
 fn gicd_read(off: u64) -> u32 {
 	let value;
-	unsafe { asm!("ldar %w0, [%1]" : "=r"(value) : "r"(GICD_BASE +off as i64) : "memory")};
+	unsafe { asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICD_BASE +off as i64) : "memory")};
 	return value;
 }
 
 fn gicd_write(off: u64, value: i32) -> () {
-	unsafe { asm!("str %w0, [%1]" : : "rZ" (value), "r" (GICD_BASE +off as i64) : "memory")};
+	unsafe { asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICD_BASE +off as i64) : "memory")};
 }
 
 fn gicc_read(off: u64) -> u32 {
 	let value;
-	unsafe{asm!("ldar %w0, [%1]" : "=r"(value) : "r"(GICC_BASE +off as i64) : "memory")};
+	unsafe{asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICC_BASE +off as i64) : "memory")};
 	return value;
 }
 
 fn gicc_write(off: u64, value: i32) {
-	unsafe{asm!("str %w0, [%1]" : : "rZ" (value), "r" (GICC_BASE +off as i64) : "memory")};
+	unsafe{asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICC_BASE +off as i64) : "memory")};
 }
 
 

@@ -27,19 +27,23 @@
 
 .global _start
 
-#define ALIGN   .align 4
+.macro ALIGN
+.align 4
+.endm
 
-#define END(name) \
+.macro END name
 	.size name, .-name
+.endm
 
-#define ENDPROC(name) \
-	.type name, @function; \
-	END(name)
+.macro ENDPROC name
+// type name, @function; END name
+.endm
 
-#define ENTRY(name) \
-	.globl name; \
-	ALIGN; \
+.macro ENTRY name
+	.globl name;
+	ALIGN;
 	name:
+.endm
 
 // TODO: print message from boot? Error handler?
 
@@ -147,13 +151,14 @@ _start:
 
     1:    trap_exit 1
           eret
-    ENDPROC(el1_irq)
+    ENDPROC el1_irq
 
     .align 6
     el1_fiq:
           trap_entry 1
           mov     x0, sp
-          bl      do_fiq
+          // TODO: implement fiq handling
+          bl      do_irq
           cmp     x0, 0
           b.eq    1f
 
@@ -167,7 +172,7 @@ _start:
 
     1:    trap_exit 1
           eret
-    ENDPROC(el1_fiq)
+    ENDPROC el1_fiq
 
     .align 6
     el1_error:
@@ -176,15 +181,7 @@ _start:
           bl      do_error
           trap_exit 1
           eret
-    ENDPROC(el1_error)
-
-    /*
-     * Bad Abort numbers
-     */
-    #define BAD_SYNC    0
-    #define BAD_IRQ     1
-    #define BAD_FIQ     2
-    #define BAD_ERROR   3
+    ENDPROC el1_error
 
     /*
      * Exception vector entry
@@ -201,36 +198,36 @@ _start:
     .endm
 
     el0_sync_invalid:
-       invalid BAD_SYNC
-    ENDPROC(el0_sync_invalid)
+       invalid 0
+    ENDPROC el0_sync_invalid
 
     el0_irq_invalid:
-       invalid BAD_IRQ
-    ENDPROC(el0_irq_invalid)
+       invalid 1
+    ENDPROC el0_irq_invalid
 
     el0_fiq_invalid:
-       invalid BAD_FIQ
-    ENDPROC(el0_fiq_invalid)
+       invalid 2
+    ENDPROC el0_fiq_invalid
 
     el0_error_invalid:
-       invalid BAD_ERROR
-    ENDPROC(el0_error_invalid)
+       invalid 3
+    ENDPROC el0_error_invalid
 
     el1_sync_invalid:
-       invalid BAD_SYNC
-    ENDPROC(el1_sync_invalid)
+       invalid 0
+    ENDPROC el1_sync_invalid
 
     el1_irq_invalid:
-       invalid BAD_IRQ
-    ENDPROC(el1_irq_invalid)
+       invalid 1
+    ENDPROC el1_irq_invalid
 
     el1_fiq_invalid:
-       invalid BAD_FIQ
-    ENDPROC(el1_fiq_invalid)
+       invalid 2
+    ENDPROC el1_fiq_invalid
 
     el1_error_invalid:
-       invalid BAD_ERROR
-    ENDPROC(el1_error_invalid)
+       invalid 3
+    ENDPROC el1_error_invalid
 
 
     // see https://developer.arm.com/docs/100933/latest/aarch64-exception-vector-table
@@ -259,7 +256,7 @@ _start:
     ventry el0_irq_invalid          // IRQ 32-bit EL0
     ventry el0_fiq_invalid          // FIQ 32-bit EL0
     ventry el0_error_invalid        // Error 32-bit EL0
-    END(vector_table)
+    END vector_table
 
     // jump to Rust code, should not return
     b       init
