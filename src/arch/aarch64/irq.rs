@@ -140,9 +140,9 @@ pub fn irq_disable() {
 	gicc_write(GICC_CTLR as u64, 0);
 }
 
-
+#[no_mangle]
 /// Called at unhandled exception
-fn do_bad_mode(reason: i32){
+pub fn do_bad_mode(reason: i32){
 	// LOG_ERROR("Receive unhandled exception: %d\n", reason);
 
 	loop {
@@ -150,7 +150,8 @@ fn do_bad_mode(reason: i32){
 	}
 }
 
-fn do_irq() -> u16 {
+#[no_mangle]
+pub fn do_irq() -> u16 {
 	let mut ret = 0;
 	let iar = gicc_read( GICC_IAR as u64);
 	let vector = iar & 0x3ff;
@@ -204,6 +205,11 @@ fn do_fiq(reg_ptr: u64) -> u16{
 	gicc_write(GICC_EOIR as u64, iar as i32);
 
 	return ret;
+}
+
+#[no_mangle]
+pub fn do_error() {
+	loop{}
 }
 
 /// dummy scheduler fun

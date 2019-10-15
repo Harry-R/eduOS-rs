@@ -24,6 +24,9 @@ extern "C" fn foo() {
 #[cfg(not(test))]
 #[no_mangle] // don't mangle the name of this function
 pub extern "C" fn main() {
+
+	println!("Hello from eduOS-rs!");
+
 	scheduler::init();
 
 	println!("Hello from eduOS-rs!");

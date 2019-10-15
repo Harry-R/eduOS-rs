@@ -27,6 +27,10 @@
 
 .global _start
 
+movz x8, 0x900, lsl 16
+movz x7, 0x42
+str x7, [x8]
+
 .macro ALIGN
 .align 4
 .endm
@@ -36,7 +40,9 @@
 .endm
 
 .macro ENDPROC name
+// TODO: get he outcommented line working
 // type name, @function; END name
+END name
 .endm
 
 .macro ENTRY name
@@ -133,9 +139,20 @@ _start:
     /*
      * SYNC & IRQ exception handler.
      */
+
+     .align 6
+    el1_sync:
+          trap_entry 1
+          mov     x0, sp
+          // TODO: implement sync
+          // bl      do_sync
+          trap_exit 1
+          eret
+    ENDPROC el1_sync
+
     .align 6
     el1_irq:
-          trap_entry 1
+          trap_entry 1f
           mov     x0, sp
           bl      do_irq
           cmp     x0, 0
@@ -143,11 +160,13 @@ _start:
          // change back to old stack frame
           mov x1, sp
           str x1, [x0]                  /* store old sp */
-          bl get_current_stack          /* get new sp   */
+          // See below
+          // bl get_current_stack          /* get new sp   */
           mov sp, x0
 
           /* call cleanup code */
-          bl finish_task_switch
+          // Cleanup not necessary here
+          // bl finish_task_switch
 
     1:    trap_exit 1
           eret
@@ -164,11 +183,16 @@ _start:
 
           mov x1, sp
           str x1, [x0]                  /* store old sp */
-          bl get_current_stack          /* get new sp   */
+          // If I understand correctly, this is redundant, as we call the scheduler in
+          // do_irq, so we already have the new sp in x0.
+          // TODO: implement for cases, where we don't call scheduler in do_irq
+          // TODO: What about saving registers?
+          // bl get_current_stack          /* get new sp   */
           mov sp, x0
 
           /* call cleanup code */
-          bl finish_task_switch
+          // Cleanup not necessary here
+          // bl finish_task_switch
 
     1:    trap_exit 1
           eret

@@ -88,7 +88,7 @@ impl Scheduler {
 		self.current_task.borrow().id
 	}
 
-	pub fn schedule(&mut self) {
+	pub fn schedule(&mut self) -> usize {
 		// do we have finished tasks? => drop tasks => deallocate implicitly the stack
 		match self.finished_tasks.pop_front() {
 			Some(id) => {
@@ -141,10 +141,9 @@ impl Scheduler {
 					unsafe { *old_stack_pointer }, new_stack_pointer);
 
 				self.current_task = new_task;
-
-				switch(old_stack_pointer, new_stack_pointer);
+				return new_stack_pointer;
 			},
-			_ => {}
+			_ => 0
 		}
 	}
 
