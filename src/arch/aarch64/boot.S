@@ -36,13 +36,12 @@
 .endm
 
 .macro ENDPROC name
-// TODO: get he outcommented line working
-// type name, @function; END name
+.type name, @function;
 END name
 .endm
 
 .macro ENTRY name
-	.globl name;
+	.global name;
 	ALIGN;
 	name:
 .endm
@@ -92,6 +91,9 @@ _start:
 
     // macro for saving context on exception
     .macro trap_entry, el
+         movz x8, 0x900, lsl 16
+         movz x7, 0x46
+         str x7, [x8]
          stp x29, x30, [sp, #-16]!
          stp x27, x28, [sp, #-16]!
          stp x25, x26, [sp, #-16]!
