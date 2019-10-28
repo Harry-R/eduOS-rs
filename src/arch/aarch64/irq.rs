@@ -129,6 +129,7 @@ fn gic_set_enable(vector: u32, enable: bool) {
 }
 
 /// Enable Interrupts
+#[no_mangle]
 pub fn irq_enable() {
     // Global enable signalling of interrupt from the cpu interface
 	gicc_write(GICC_CTLR as u64, GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL);

@@ -8,9 +8,11 @@ pub unsafe extern "C" fn init() -> ! {
 
     extern "Rust" {
         fn main() -> !;
+        fn irq_enable();
     }
 
-   main();
+    irq_enable();
+    main();
 }
 
 // Disable all cores except core 0, and then jump to init()
