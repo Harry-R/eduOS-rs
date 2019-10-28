@@ -18,11 +18,11 @@ use scheduler::*;
 const GICR_BASE: u64 = 0;
 
 /* GIC Distributor interface register offsets that are common to GICv3 & GICv2 */
-const GICD_BASE: i64 = (1 << 39);
+const GICD_BASE: i64 = 0x08000000;
 const GICC_BASE: i64 = GICD_BASE + GICD_SIZE;
 const GIC_SIZE: i64 = GICD_SIZE + GICC_SIZE;
 const GICD_SIZE: i64 = 0x010000;
-const GICC_SIZE: i64 = 0x020000;
+const GICC_SIZE: i64 = 0x010000;
 
 const GICD_CTLR: i32 = 0x0;
 const GICD_TYPER: i32 = 0x4;
