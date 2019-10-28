@@ -31,11 +31,20 @@ pub struct Scheduler {
 
 impl Scheduler {
 	pub fn new() -> Scheduler {
+		println!("New Scheduler");
 		let tid = TaskId::from(TID_COUNTER.fetch_add(1, Ordering::SeqCst));
-		let idle_task = Rc::new(RefCell::new(Task::new_idle(tid)));
+		println!("tid fin");
+		let new_idle_task = RefCell::new(Task::new_idle(tid));
+		println!("idle wip");
+		let idle_task = Rc::new(new_idle_task);
+		println!("idle fin");
 		let mut tasks = BTreeMap::new();
 
+		println!("Sched let fin");
+
 		tasks.insert(tid, idle_task.clone());
+
+		println!("new sched fin");
 
 		Scheduler {
 			current_task: idle_task.clone(),
@@ -47,6 +56,7 @@ impl Scheduler {
 	}
 
 	fn get_tid(&self) -> TaskId {
+		println!("get TID");
 		loop {
 			let id = TaskId::from(TID_COUNTER.fetch_add(1, Ordering::SeqCst));
 
@@ -57,6 +67,7 @@ impl Scheduler {
 	}
 
 	pub fn spawn(&mut self, func: extern fn()) -> TaskId {
+		println!("Spawn");
 		// Create the new task.
 		let tid = self.get_tid();
 		let task = Rc::new(RefCell::new(Task::new(tid, TaskStatus::TaskReady)));
@@ -74,6 +85,7 @@ impl Scheduler {
 	}
 
 	pub fn exit(&mut self) {
+		println!("exit");
 		if self.current_task.borrow().status != TaskStatus::TaskIdle {
 			info!("finish task with id {}", self.current_task.borrow().id);
 			self.current_task.borrow_mut().status = TaskStatus::TaskFinished;
@@ -89,6 +101,7 @@ impl Scheduler {
 	}
 
 	pub fn schedule(&mut self) -> usize {
+		println!("schedule");
 		// do we have finished tasks? => drop tasks => deallocate implicitly the stack
 		match self.finished_tasks.pop_front() {
 			Some(id) => {

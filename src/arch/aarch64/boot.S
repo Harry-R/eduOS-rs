@@ -27,10 +27,6 @@
 
 .global _start
 
-movz x8, 0x900, lsl 16
-movz x7, 0x42
-str x7, [x8]
-
 .macro ALIGN
 .align 4
 .endm
@@ -68,6 +64,12 @@ ldr     \xreg, [sp], #8
 
 
 _start:
+
+    // debug output A
+    movz x8, 0x900, lsl 16
+    movz x7, 0x41
+    str x7, [x8]
+
     // read cpu id, stop slave cores
     mrs     x1, mpidr_el1
     and     x1, x1, #3
@@ -80,6 +82,11 @@ _start:
     // init 1G stack stack in RAM area (>0x40000000 for qemu virt device)
     movz x1, 0x5000, lsl 16
     mov sp, x1
+
+    // debug output B
+    movz x8, 0x900, lsl 16
+    movz x7, 0x42
+    str x7, [x8]
 
     // init exception handler
 
@@ -135,6 +142,17 @@ _start:
          ldp x29, x30, [sp], #16
     .endm
 
+    // debug output C
+    movz x8, 0x900, lsl 16
+    movz x7, 0x43
+    str x7, [x8]
+
+    // jump to Rust code, should not return
+    b       init
+    // for failsafe, halt this core too
+    // TODO: check branch dest.: Why jump to 1 back?
+    b       1b
+
 
     /*
      * SYNC & IRQ exception handler.
@@ -149,6 +167,11 @@ _start:
           trap_exit 1
           eret
     ENDPROC el1_sync
+
+    // debug output D
+    movz x8, 0x900, lsl 16
+    movz x7, 0x44
+    str x7, [x8]
 
     .align 6
     el1_irq:
@@ -282,8 +305,7 @@ _start:
     ventry el0_error_invalid        // Error 32-bit EL0
     END vector_table
 
-    // jump to Rust code, should not return
-    b       init
-    // for failsafe, halt this core too
-    // TODO: check branch dest.: Why jump to 1 back?
-    b       1b
+    // debug output E
+    movz x8, 0x900, lsl 16
+    movz x7, 0x45
+    str x7, [x8]

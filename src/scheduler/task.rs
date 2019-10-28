@@ -60,9 +60,10 @@ pub struct Stack {
 
 impl Stack {
 	pub const fn new() -> Stack {
-		Stack {
+		let stack = Stack {
 			buffer: [0; STACK_SIZE]
-		}
+		};
+		return stack
 	}
 
 	pub fn top(&self) -> usize {
@@ -129,12 +130,15 @@ pub struct Task {
 
 impl Task {
 	pub fn new_idle(id: TaskId) -> Task {
-		Task {
+		println!("Creating new idle");
+		let ret = Task {
 			id: id,
 			status: TaskStatus::TaskIdle,
 			last_stack_pointer: 0,
 			stack: unsafe { &mut BOOT_STACK }
-		}
+		};
+		println!("fin creating idle");
+		return ret
 	}
 
 	pub fn new(id: TaskId, status: TaskStatus) -> Task {

@@ -13,12 +13,14 @@
 pub mod task;
 mod scheduler;
 
+#[link_section = ".data"]
 static mut SCHEDULER: Option<scheduler::Scheduler> = None;
 
 /// Initialite module, must be called once, and only once
 pub fn init() {
 	unsafe {
 		SCHEDULER = Some(scheduler::Scheduler::new());
+		println!("init fin");
 	}
 }
 
