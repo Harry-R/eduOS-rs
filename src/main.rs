@@ -35,7 +35,8 @@ pub extern "C" fn main() {
 		scheduler::spawn(foo);
 	}
 
-	scheduler::reschedule();
+	// send el1 sync exception with resched_int
+	unsafe{asm!("svc 1" : : : )};
 
 	println!("Shutdown system!");
 
