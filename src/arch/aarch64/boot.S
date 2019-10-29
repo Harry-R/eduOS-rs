@@ -40,12 +40,6 @@
 END name
 .endm
 
-.macro ENTRY name
-	.global name;
-	ALIGN;
-	name:
-.endm
-
 // TODO: print message from boot? Error handler?
 
 // Marco definition
@@ -81,6 +75,10 @@ _start:
     // init 1G stack stack in RAM area (>0x40000000 for qemu virt device)
     movz x1, 0x5000, lsl 16
     mov sp, x1
+
+    /* Set exception table */
+    ldr x0, =vector_table
+    msr vbar_el1, x0
 
     // debug output B
     movz x8, 0x900, lsl 16
@@ -281,7 +279,9 @@ _start:
 
     // see https://developer.arm.com/docs/100933/latest/aarch64-exception-vector-table
     .align  11
-    ENTRY(vector_table)
+    .globl vector_table;
+	ALIGN;
+    vector_table:
     /* Current EL with SP0 */
     ventry el1_sync_invalid	        // Synchronous EL1t
     ventry el1_irq_invalid	        // IRQ EL1t
