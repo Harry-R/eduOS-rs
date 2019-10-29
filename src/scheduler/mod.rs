@@ -31,8 +31,9 @@ pub fn spawn(func: extern fn()) -> task::TaskId {
 	}
 }
 
+// TODO: check compatibility to x86 version (changed arch independent part here...)
 /// Trigger the scheduler to switch to the next available task
-pub fn reschedule() {
+pub fn reschedule() -> usize{
 	unsafe {
 		SCHEDULER.as_mut().unwrap().reschedule()
 	}

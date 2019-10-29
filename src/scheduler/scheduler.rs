@@ -150,7 +150,7 @@ impl Scheduler {
 					self.finished_tasks.push_back(old_id);
 				}
 
-				debug!("Switching task from {} to {} (stack {:#X} => {:#X})", old_id, new_id,
+				println!("Switching task from {} to {} (stack {:#X} => {:#X})", old_id, new_id,
 					unsafe { *old_stack_pointer }, new_stack_pointer);
 
 				self.current_task = new_task;
@@ -160,7 +160,7 @@ impl Scheduler {
 		}
 	}
 
-	pub fn reschedule(&mut self) {
-		self.schedule();
+	pub fn reschedule(&mut self) -> usize {
+		self.schedule()
 	}
 }

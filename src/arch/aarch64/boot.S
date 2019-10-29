@@ -162,9 +162,16 @@ _start:
     el1_sync:
           trap_entry 1
           mov     x0, sp
-          // TODO: implement sync
-          // bl      do_sync
-          trap_exit 1
+          bl      do_sync
+          cmp     x0, 0
+          b.eq    1f
+          // change back to old stack frame
+          mov x1, sp
+          str x1, [x0]                  /* store old sp */
+          // See below
+          // bl get_current_stack          /* get new sp   */
+          mov sp, x0
+          1:    trap_exit 1
           eret
     ENDPROC el1_sync
 

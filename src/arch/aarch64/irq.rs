@@ -10,7 +10,7 @@
 
 use core::fmt;
 use logging::*;
-use scheduler::*;
+use scheduler::reschedule;
 
 // TODO enhancement: use aarch64 or cortex-a crate for register stuff
 
@@ -152,7 +152,18 @@ pub fn do_bad_mode(reason: i32){
 }
 
 #[no_mangle]
-pub fn do_irq() -> u16 {
+pub fn do_sync() -> usize {
+	println!("do_sync");
+	let iar = gicc_read( GICC_IAR as u64);
+	let ret = call_scheduler();
+	gicc_write(GICC_EOIR as u64, iar as i32);
+	println!("new sp: 0x{:x}", ret);
+	return ret;
+}
+
+#[no_mangle]
+pub fn do_irq() -> usize {
+	println!("do irq");
 	let mut ret = 0;
 	let iar = gicc_read( GICC_IAR as u64);
 	let vector = iar & 0x3ff;
@@ -168,13 +179,13 @@ pub fn do_irq() -> u16 {
 	// Look for highest priority task and return it's stack pointer,
 	// if (get_highest_priority() > per_core(current_task)->prio) {
 		// there's a ready task with higher priority
-		ret = scheduler();
+		ret = call_scheduler();
 	// 	}
 	gicc_write(GICC_EOIR as u64, iar as i32);
 	return ret;
 }
 
-fn do_fiq(reg_ptr: u64) -> u16{
+fn do_fiq(reg_ptr: u64) -> usize{
 	let mut ret = 0;
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
@@ -200,7 +211,7 @@ fn do_fiq(reg_ptr: u64) -> u16{
 	} else if get_highest_priority() > per_core(current_task).prio {
 		// there's a ready task with higher priority
 	*/
-		ret = scheduler();
+		ret = call_scheduler();
 	//}
 
 	gicc_write(GICC_EOIR as u64, iar as i32);
@@ -215,6 +226,6 @@ pub fn do_error() {
 
 /// dummy scheduler fun
 // TODO: connect to real scheduler
-fn scheduler() -> u16 {
-	return 42;
+fn call_scheduler() -> usize {
+	reschedule()
 }
