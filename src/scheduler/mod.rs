@@ -20,7 +20,6 @@ static mut SCHEDULER: Option<scheduler::Scheduler> = None;
 pub fn init() {
 	unsafe {
 		SCHEDULER = Some(scheduler::Scheduler::new());
-		println!("init fin");
 	}
 }
 

@@ -29,8 +29,6 @@ pub extern "C" fn main() {
 
 	scheduler::init();
 
-	println!("Hello from eduOS-rs!");
-
 	for _i in 0..2 {
 		scheduler::spawn(foo);
 	}
