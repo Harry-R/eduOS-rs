@@ -143,8 +143,9 @@ pub fn irq_disable() {
 
 #[no_mangle]
 /// Called at unhandled exception
-pub fn do_bad_mode(reason: i32){
-	// LOG_ERROR("Receive unhandled exception: %d\n", reason);
+pub fn do_bad_mode(sp: usize, reason: i32){
+
+	println!("Receive unhandled exception - sp: 0x{:x} - reason:{}", sp, reason);
 
 	loop {
 		// HALT;
