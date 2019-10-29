@@ -40,6 +40,13 @@
 END name
 .endm
 
+// Prints a character to serial console
+.macro PRINTC char
+    movz x8, 0x900, lsl 16
+    movz x7, \char
+    str x7, [x8]
+.endm
+
 // TODO: print message from boot? Error handler?
 
 // Marco definition
@@ -59,9 +66,7 @@ ldr     \xreg, [sp], #8
 _start:
 
     // debug output A
-    movz x8, 0x900, lsl 16
-    movz x7, 0x41
-    str x7, [x8]
+    PRINTC 0x41
 
     // read cpu id, stop slave cores
     mrs     x1, mpidr_el1
@@ -81,17 +86,14 @@ _start:
     msr vbar_el1, x0
 
     // debug output B
-    movz x8, 0x900, lsl 16
-    movz x7, 0x42
-    str x7, [x8]
+    PRINTC 0x42
 
     // init exception handler
 
     // macro for saving context on exception
     .macro trap_entry, el
-         movz x8, 0x900, lsl 16
-         movz x7, 0x46
-         str x7, [x8]
+         // debug output E
+         PRINTC 0x45
          stp x29, x30, [sp, #-16]!
          stp x27, x28, [sp, #-16]!
          stp x25, x26, [sp, #-16]!
@@ -143,9 +145,7 @@ _start:
     .endm
 
     // debug output C
-    movz x8, 0x900, lsl 16
-    movz x7, 0x43
-    str x7, [x8]
+    PRINTC 0x43
 
     // jump to Rust code, should not return
     b       init
@@ -174,11 +174,6 @@ _start:
           1:    trap_exit 1
           eret
     ENDPROC el1_sync
-
-    // debug output D
-    movz x8, 0x900, lsl 16
-    movz x7, 0x44
-    str x7, [x8]
 
     .align 6
     el1_irq:
@@ -268,19 +263,19 @@ _start:
     ENDPROC el0_error_invalid
 
     el1_sync_invalid:
-       invalid 0
+       invalid 10
     ENDPROC el1_sync_invalid
 
     el1_irq_invalid:
-       invalid 1
+       invalid 11
     ENDPROC el1_irq_invalid
 
     el1_fiq_invalid:
-       invalid 2
+       invalid 12
     ENDPROC el1_fiq_invalid
 
     el1_error_invalid:
-       invalid 3
+       invalid 13
     ENDPROC el1_error_invalid
 
 
@@ -313,8 +308,3 @@ _start:
     ventry el0_fiq_invalid          // FIQ 32-bit EL0
     ventry el0_error_invalid        // Error 32-bit EL0
     END vector_table
-
-    // debug output E
-    movz x8, 0x900, lsl 16
-    movz x7, 0x45
-    str x7, [x8]
