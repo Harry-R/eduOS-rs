@@ -12,6 +12,7 @@ use core::panic::PanicInfo;
 use core::ptr;
 use eduos_rs::arch::processor::{shutdown,halt};
 use eduos_rs::scheduler;
+use eduos_rs::arch::aarch64::irq::trigger_schedule;
 
 extern "C" fn foo() {
 	for _i in 0..5 {
@@ -34,7 +35,7 @@ pub extern "C" fn main() {
 	}
 
 	// send el1 sync exception with resched_int
-	unsafe{asm!("svc 1" : : : )};
+	trigger_schedule();
 
 	println!("Shutdown system!");
 

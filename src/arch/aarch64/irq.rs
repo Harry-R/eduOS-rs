@@ -71,6 +71,11 @@ const EINVAL: i32 = 42;
 // if wee need more than one handler
 const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
+pub fn trigger_schedule() {
+	println!("triggering schedule interrupt");
+	gicd_write(GICD_SGIR as u64, ((2 << 24) | RESCHED_INT) as u32);
+	println!("done");
+}
 
 fn gicd_read(off: u64) -> u32 {
 	let value;
@@ -78,7 +83,7 @@ fn gicd_read(off: u64) -> u32 {
 	return value;
 }
 
-fn gicd_write(off: u64, value: i32) -> () {
+fn gicd_write(off: u64, value: u32) -> () {
 	unsafe { asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICD_BASE +off as i64) : "memory")};
 }
 
@@ -88,7 +93,7 @@ fn gicc_read(off: u64) -> u32 {
 	return value;
 }
 
-fn gicc_write(off: u64, value: i32) {
+fn gicc_write(off: u64, value: u32) {
 	unsafe{asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICC_BASE +off as i64) : "memory")};
 }
 
@@ -121,10 +126,10 @@ fn mask_interrupt(vector: u32) -> i32 {
 fn gic_set_enable(vector: u32, enable: bool) {
     if enable {
         let regoff: u64 = (GICD_ISENABLER + (4 * (vector / 32) as i32)) as u64;
-        gicd_write(regoff, (gicd_read(regoff) | (1 << (vector % 32))) as i32);
+        gicd_write(regoff, (gicd_read(regoff) | (1 << (vector % 32))) as u32);
     } else {
         let regoff :u64 = (GICD_ICENABLER + (4 * (vector / 32) as i32)) as u64;;
-        gicd_write(regoff, (gicd_read(regoff) | (1 << (vector % 32))) as i32);
+        gicd_write(regoff, (gicd_read(regoff) | (1 << (vector % 32))) as u32);
     }
 }
 
@@ -132,7 +137,14 @@ fn gic_set_enable(vector: u32, enable: bool) {
 #[no_mangle]
 pub fn irq_enable() {
     // Global enable signalling of interrupt from the cpu interface
-	gicc_write(GICC_CTLR as u64, GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL);
+	gicc_write(GICC_CTLR as u64, (GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL) as u32);
+	gicd_enable()
+}
+
+fn gicd_enable() {
+	println!("global enable forwarding from gicd");
+	// Global enable forwarding interrupts from distributor to cpu interface
+	gicd_write(GICD_CTLR as u64, (GICD_CTLR_ENABLEGRP0 | GICD_CTLR_ENABLEGRP1) as u32);
 }
 
 /// Disable Interrupts
@@ -157,7 +169,7 @@ pub fn do_sync() -> usize {
 	println!("do_sync");
 	let iar = gicc_read( GICC_IAR as u64);
 	let ret = call_scheduler();
-	gicc_write(GICC_EOIR as u64, iar as i32);
+	gicc_write(GICC_EOIR as u64, iar);
 	println!("new sp: 0x{:x}", ret);
 	return ret;
 }
@@ -182,7 +194,7 @@ pub fn do_irq() -> usize {
 		// there's a ready task with higher priority
 		ret = call_scheduler();
 	// 	}
-	gicc_write(GICC_EOIR as u64, iar as i32);
+	gicc_write(GICC_EOIR as u64, iar);
 	return ret;
 }
 
@@ -215,7 +227,7 @@ fn do_fiq(reg_ptr: u64) -> usize{
 		ret = call_scheduler();
 	//}
 
-	gicc_write(GICC_EOIR as u64, iar as i32);
+	gicc_write(GICC_EOIR as u64, iar);
 
 	return ret;
 }
