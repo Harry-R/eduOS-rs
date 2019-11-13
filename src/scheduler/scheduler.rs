@@ -86,6 +86,12 @@ impl Scheduler {
 		self.current_task.borrow().id
 	}
 
+	pub fn get_current_stack(&self) -> usize {
+		let ptr = self.current_task.borrow().last_stack_pointer;
+		println!("last stack pointer 0x{:x}", ptr);
+		return ptr
+	}
+
 	pub fn schedule(&mut self) -> usize {
 		// do we have finished tasks? => drop tasks => deallocate implicitly the stack
 		match self.finished_tasks.pop_front() {
@@ -139,7 +145,7 @@ impl Scheduler {
 					unsafe { *old_stack_pointer }, new_stack_pointer);
 
 				self.current_task = new_task;
-				return new_stack_pointer;
+				return old_stack_pointer as usize;
 			},
 			_ => 0
 		}
