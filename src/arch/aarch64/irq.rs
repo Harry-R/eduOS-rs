@@ -204,13 +204,27 @@ pub fn do_bad_mode(sp: usize, reason: i32){
 }
 
 #[no_mangle]
-pub fn do_sync() -> usize {
+pub fn do_sync(state: *const State){
 	println!("do_sync");
+	unsafe { println!("{:?}", *state); }
 	let iar = gicc_read( GICC_IAR as u64);
-	let ret = call_scheduler();
+	let esr = read_esr();
+	println!("Exception Syndrome Register 0x{:x}", esr);
 	gicc_write(GICC_EOIR as u64, iar);
-	println!("new sp: 0x{:x}", ret);
-	return ret;
+	println!("error at 0x{:x}", read_elr());
+	do_error();
+}
+
+fn read_elr() -> u64 {
+	let mut ret: u64 = 0;
+	unsafe { asm!("mrs $0, elr_el1" : "=r"(ret) :: "memory" : "volatile"); }
+	ret
+}
+
+fn read_esr() -> u64 {
+	let mut val: u64 = 0;
+    unsafe { asm!("mrs $0, esr_el1" : "=r"(val) :: "memory" : "volatile"); }
+    return val;
 }
 
 #[no_mangle]
