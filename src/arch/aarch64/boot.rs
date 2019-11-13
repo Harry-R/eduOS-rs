@@ -8,10 +8,10 @@ pub unsafe extern "C" fn init() -> ! {
 
     extern "Rust" {
         fn main() -> !;
-        fn irq_enable();
+        fn gic_irq_init();
     }
 
-    irq_enable();
+    gic_irq_init();
     main();
 }
 

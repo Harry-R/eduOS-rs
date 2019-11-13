@@ -177,8 +177,9 @@ fn gicc_set_priority(priority: u32) {
 	gicc_write(GICC_PMR, priority & 0xFF);
 }
 
-pub fn init() {
-
+#[no_mangle] 
+pub fn gic_irq_init() {
+	irq_enable();
 	println!("initialize interrupt controller");
 	gicd_enable();
 	gicc_set_priority(0xF0);
