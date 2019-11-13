@@ -1,6 +1,7 @@
 #![feature(panic_info_message)]
 #![feature(abi_x86_interrupt)]
 #![feature(asm)]
+#![feature(naked_functions)]
 #![no_std] // don't link the Rust standard library
 #![cfg_attr(not(test), no_main)] // disable all Rust-level entry points
 #![cfg_attr(test, allow(dead_code, unused_macros, unused_imports))]
@@ -12,13 +13,16 @@ use core::panic::PanicInfo;
 use core::ptr;
 use eduos_rs::arch::processor::{shutdown,halt};
 use eduos_rs::scheduler;
-use eduos_rs::arch::aarch64::irq::trigger_schedule;
+use eduos_rs::arch::aarch64::irq;
 
+#[naked]
 extern "C" fn foo() {
 	for _i in 0..5 {
 		println!("hello from task {}", scheduler::get_current_taskid());
-		scheduler::reschedule();
+		// call scheduler (cooperative multitasking)
+		irq::trigger_schedule();
 	}
+	println!("Leave foo!");
 }
 
 /// This is the main function called by `init()` function from boot.rs
@@ -34,8 +38,8 @@ pub extern "C" fn main() {
 		scheduler::spawn(foo);
 	}
 
-	// send el1 sync exception with resched_int
-	trigger_schedule();
+	// call scheduler (cooperative multitasking)
+	irq::trigger_schedule();
 
 	println!("Shutdown system!");
 
