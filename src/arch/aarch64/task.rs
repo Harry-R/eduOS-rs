@@ -14,13 +14,13 @@ use scheduler::{do_exit,get_current_taskid};
 use consts::*;
 use logging::*;
 use compiler_builtins::mem::memset;
+use core::ptr;
 
 #[derive(Debug)]
-#[repr(C, packed)]
-struct State {
-    cpsr: u64,
-	pc: u64,
-	sp: u64,
+#[repr(C)]
+pub struct State {
+    elr_el1: u64,
+	spsr_el1: u64,
 	x0: u64,
 	x1: u64,
 	x2: u64,
@@ -52,85 +52,19 @@ struct State {
 	x28: u64,
 	x29: u64,
 	x30: u64,
-
-/*
-	/// X0 register
-	x0: u64,
-	/// X1 register
-	x1: u64,
-	/// X2 register
-	x2: u64,
-	/// X3 register
-	x3: u64,
-	/// X4 register
-	x4: u64,
-	/// X5 register
-	x5: u64,
-	/// X6 register
-	x6: u64,
-	/// X7 register
-	x7: u64,
-	/// X8 register
-	x8: u64,
-	/// X9 register
-	x9: u64,
-	/// X10 register
-	x10: u64,
-	/// X11 register
-	x11: u64,
-	/// X12 register
-	x12: u64,
-	/// X13 register
-	x13: u64,
-	/// X14 register
-	x14: u64,
-	/// X15 register
-	x15: u64,
-	/// X16 register
-	x16: u64,
-	/// X17 register
-	x17: u64,
-	/// X18 register
-	x18: u64,
-	/// X19 register
-	x19: u64,
-	/// X10 register
-	x20: u64,
-	/// X21 register
-	x21: u64,
-	/// X22 register
-	x22: u64,
-	/// X23 register
-	x23: u64,
-	/// X24 register
-	x24: u64,
-	/// X25 register
-	x25: u64,
-	/// X26 register
-	x26: u64,
-	/// X27 register
-	x27: u64,
-	/// X28 register
-	x28: u64,
-	/// X29 register
-	x29: u64,
-	/// X30 register
-	x30: u64,
-	/// (pseudo) SP register,
-	sp: u64,
-	/// Program Counter
-	pc: u64,
-	/// status flags
-	cpsr: u64,
-*/
+	x31: u64, // alias sp or xzr (depends on the instruction)
 }
 
 extern "C" fn leave_task() {
 	debug!("finish task {}", get_current_taskid());
-
 	do_exit();
-
 	loop {}
+}
+
+extern "C" fn enter_task(func: extern fn()) {
+	println!("Enter function at 0x{:x}", func as usize);
+	func();
+	leave_task();
 }
 
 impl TaskFrame for Task {
@@ -138,34 +72,27 @@ impl TaskFrame for Task {
     fn create_stack_frame(&mut self, func: extern fn())
 	{
 		unsafe {
-			let mut stack: *mut u64 = ((*self.stack).top()) as *mut u64;
+			// create aligned stack
+			let aligned_stack = (*self.stack).top() & !0xFFusize;
+			let mut stack: *mut u64 = aligned_stack as *mut u64;
 
-			memset((*self.stack).bottom() as *mut u8, 0xCD, STACK_SIZE);
-
-			/* Only marker for debugging purposes, ... */
-			*stack = 0xDEADBEEFu64;
-			stack = (stack as usize - size_of::<u64>()) as *mut u64;
-
-			/* the first-function-to-be-called's arguments, ... */
-			//TODO: add arguments
-
-			/* and the "caller" we shall return to.
-	 		 * This procedure cleans the task after exit. */
-			*stack = (leave_task as *const()) as u64;
+			// save space for storing task state
 			stack = (stack as usize - size_of::<State>()) as *mut u64;
-
 			let state: *mut State = stack as *mut State;
-			memset(state as *mut u8, 0x00, size_of::<State>());
+			ptr::write_bytes(state, 0, 1);
 
-			(*state).sp = (stack as usize + size_of::<State>()) as u64;
-			(*state).x29 = (*state).sp + size_of::<u64>() as u64;
+			//
+			(*state).elr_el1 = (leave_task as *const()) as u64;
+			(*state).spsr_el1 = 0x205u64;
+			(*state).x0 = (func as *const()) as u64;
+			(*state).x30 = (enter_task as *const()) as u64;
 
-			(*state).pc = (func as *const()) as u64;;
-			// TODO: Check, if we can use cpsr in the same way as rflags
-			(*state).cpsr = 0x1002u64;
+			println!("Set elr to 0x{:x} and spsr to 0x{:x}", (*state).elr_el1, (*state).spsr_el1);
 
 			/* Set the task's stack pointer entry to the stack we have crafted right now. */
-			self.last_stack_pointer =  stack as usize;
+			self.last_stack_pointer =  state as usize;
+
+			println!("last stack pointer set to 0x{:x}", self.last_stack_pointer);
 		}
 	}
 }
