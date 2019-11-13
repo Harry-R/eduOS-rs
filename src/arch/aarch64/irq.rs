@@ -11,6 +11,7 @@
 use core::fmt;
 use logging::*;
 use scheduler::reschedule;
+use arch::aarch64::task::State;
 
 // TODO enhancement: use aarch64 or cortex-a crate for register stuff
 
@@ -177,7 +178,7 @@ fn gicc_set_priority(priority: u32) {
 	gicc_write(GICC_PMR, priority & 0xFF);
 }
 
-#[no_mangle] 
+#[no_mangle]
 pub fn gic_irq_init() {
 	irq_enable();
 	println!("initialize interrupt controller");
@@ -213,62 +214,43 @@ pub fn do_sync() -> usize {
 }
 
 #[no_mangle]
-pub fn do_irq() -> usize {
+pub fn do_irq(state: *const State) -> usize {
 	println!("do irq");
-	let mut ret = 0;
-	let iar = gicc_read( GICC_IAR as u64);
-	let vector = iar & 0x3ff;
-
-    // TODO: nice to have: Implement logging, see HermitCore
-	// LOG_INFO("Receive interrupt %d\n", vector);
-
-	// Check if timers have expired that would unblock tasks
-	// Maybe implement later
-	// check_workqueues_in_irqhandler(vector);
-
-    // implement later, for now it is enough to call scheduler in every case
-	// Look for highest priority task and return it's stack pointer,
-	// if (get_highest_priority() > per_core(current_task)->prio) {
-		// there's a ready task with higher priority
-		ret = call_scheduler();
-	// 	}
-	gicc_write(GICC_EOIR as u64, iar);
-	return ret;
-}
-
-#[no_mangle]
-fn do_fiq(reg_ptr: u64) -> usize{
-	let mut ret = 0;
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
 
-	//// LOG_INFO("Receive fiq %d\n", vector);
+	println!("Receive irq {}", vector);
+	unsafe { println!("{:?}", *state); }
 
-	if vector < MAX_HANDLERS as u32 && irq_routines[vector as usize] != 0 {
-		// implement later, if real irq handlers are needed
-		// (irq_routines[vector as usize])(regs);
-	} else if vector != RESCHED_INT as u32 {
-		// LOG_INFO("Unable to handle fiq %d\n", vector);
-	}
-
-	// Check if timers have expired that would unblock tasks
-    // Ignore first, maybe implement later
-	// check_workqueues_in_irqhandler(vector);
-
-	// implement later, for now it is enough to call scheduler in every case
-	/*
-	if (vector == INT_PPI_NSPHYS_TIMER) || (vector == RESCHED_INT as u32) {
-		// a timer interrupt may have caused unblocking of tasks
-		ret = scheduler();
-	} else if get_highest_priority() > per_core(current_task).prio {
-		// there's a ready task with higher priority
-	*/
-		ret = call_scheduler();
-	//}
+	let ret = if true /*vector == RESCHED_INT*/ {
+        call_scheduler()
+    } else {
+        0
+    };
 
 	gicc_write(GICC_EOIR as u64, iar);
 
-	return ret;
+	ret
+}
+
+#[no_mangle]
+fn do_fiq(state: *const State) -> usize{
+	println!("do fiq");
+	let iar = gicc_read(GICC_IAR as u64);
+	let vector = iar & 0x3ff;
+
+	println!("Receive fiq {}", vector);
+	unsafe { println!("{:?} 0x{:x}", *state, state as u64); }
+
+	let ret = if true /*vector == RESCHED_INT*/ {
+		call_scheduler()
+	} else {
+		0
+	};
+
+	gicc_write(GICC_EOIR as u64, iar);
+
+	ret
 }
 
 #[no_mangle]
