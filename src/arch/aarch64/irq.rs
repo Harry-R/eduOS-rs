@@ -71,10 +71,17 @@ const EINVAL: u32 = 42;
 // if wee need more than one handler
 const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
+/// deceleration for assembly function, that initiates task switch
+extern "C" {
+	fn _reschedule();
+}
+
+/// triggers a reschedule, either by interrupt or by directly calling the scheduler
 pub fn trigger_schedule() {
-	println!("triggering schedule interrupt");
-	gicd_write(GICD_SGIR as u64, ((2 << 24) | RESCHED_INT) as u32);
-	println!("done");
+	// by interrupt
+	// gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
+	// by calling scheduler directly
+	unsafe { _reschedule(); }
 }
 
 fn gicd_read(off: u64) -> u32 {
