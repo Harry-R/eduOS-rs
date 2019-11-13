@@ -235,6 +235,7 @@ pub fn do_irq() -> usize {
 	return ret;
 }
 
+#[no_mangle]
 fn do_fiq(reg_ptr: u64) -> usize{
 	let mut ret = 0;
 	let iar = gicc_read(GICC_IAR as u64);
@@ -274,8 +275,7 @@ pub fn do_error() {
 	loop{}
 }
 
-/// dummy scheduler fun
-// TODO: connect to real scheduler
+#[no_mangle]
 fn call_scheduler() -> usize {
 	reschedule()
 }
