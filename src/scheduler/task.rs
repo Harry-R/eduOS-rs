@@ -123,7 +123,7 @@ pub struct Task {
 	pub status: TaskStatus,
 	/// Last stack pointer before a context switch to another task
 	pub last_stack_pointer: usize,
-	// Stack of the task
+	/// Stack of the task
 	pub stack: *mut Stack,
 }
 

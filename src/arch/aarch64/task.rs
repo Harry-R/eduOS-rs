@@ -55,15 +55,21 @@ pub struct State {
 	x31: u64, // alias sp or xzr (depends on the instruction)
 }
 
-extern "C" fn leave_task() {
-	debug!("finish task {}", get_current_taskid());
+pub extern "C" fn leave_task() {
+	println!("finish task {}", get_current_taskid());
 	do_exit();
-	loop {}
+	loop {
+		println!("loop")
+	}
 }
 
 extern "C" fn enter_task(func: extern fn()) {
 	println!("Enter function at 0x{:x}", func as usize);
+	let mut val: u64 = 0;
+	unsafe { asm!("mov x0, x30" : "={x0}"(val) :: "memory" : "volatile"); }
+    println!("{:x}", val);
 	func();
+	println!("leave function at 0x{:x}", func as usize);
 	leave_task();
 }
 

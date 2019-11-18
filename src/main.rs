@@ -14,15 +14,19 @@ use core::ptr;
 use eduos_rs::arch::processor::{shutdown,halt};
 use eduos_rs::scheduler;
 use eduos_rs::arch::aarch64::irq;
+use eduos_rs::arch::aarch64::task::leave_task;
 
 #[naked]
 extern "C" fn foo() {
-	for _i in 0..5 {
+	/**
+	for _i in 0..2 {
 		println!("hello from task {}", scheduler::get_current_taskid());
 		// call scheduler (cooperative multitasking)
-		irq::trigger_schedule();
-	}
+		// irq::trigger_schedule();
+	} **/
 	println!("Leave foo!");
+	// unsafe { asm!("mov x30, 1073747100" :::: "volatile"); }
+	return;
 }
 
 /// This is the main function called by `init()` function from boot.rs
@@ -34,7 +38,7 @@ pub extern "C" fn main() {
 
 	scheduler::init();
 
-	for _i in 0..2 {
+	for _i in 0..1 {
 		scheduler::spawn(foo);
 	}
 

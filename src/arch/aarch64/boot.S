@@ -216,7 +216,6 @@ PRINTC 0x42
 
           /* call cleanup code */
           // Cleanup not necessary here
-          // bl finish_task_switch
 
 1:        trap_exit
           ret

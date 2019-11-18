@@ -15,8 +15,8 @@ pub use self::x86_64::switch::switch;
 
 #[cfg(target_arch="aarch64")]
 pub use self::aarch64::{serial, processor};
-#[cfg(target_arch="aarch64")]
-pub use self::aarch64::switch::switch;
+// #[cfg(target_arch="aarch64")]
+// pub use self::aarch64::switch::switch;
 
 // Implementations for x86_64.
 #[cfg(target_arch="x86_64")]

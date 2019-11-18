@@ -10,7 +10,7 @@ use alloc::collections::{BTreeMap, VecDeque};
 use core::cell::RefCell;
 use core::sync::atomic::{AtomicU32, Ordering};
 use scheduler::task::*;
-use arch::switch;
+// use arch::switch;
 use logging::*;
 
 static NO_TASKS: AtomicU32 = AtomicU32::new(0);
@@ -73,7 +73,7 @@ impl Scheduler {
 
 	pub fn exit(&mut self) {
 		if self.current_task.borrow().status != TaskStatus::TaskIdle {
-			info!("finish task with id {}", self.current_task.borrow().id);
+			println!("finish task with id {}", self.current_task.borrow().id);
 			self.current_task.borrow_mut().status = TaskStatus::TaskFinished;
 		} else {
 			panic!("unable to terminate idle task");
@@ -88,7 +88,6 @@ impl Scheduler {
 
 	pub fn get_current_stack(&self) -> usize {
 		let ptr = self.current_task.borrow().last_stack_pointer;
-		println!("last stack pointer 0x{:x}", ptr);
 		return ptr
 	}
 
@@ -97,7 +96,7 @@ impl Scheduler {
 		match self.finished_tasks.pop_front() {
 			Some(id) => {
 				if self.tasks.remove(&id).is_none() == true {
-					info!("Unable to drop task {}", id);
+					println!("Unable to drop task {}", id);
 				}
 			},
 			_ => {}
@@ -113,7 +112,7 @@ impl Scheduler {
 		let mut next_task = self.ready_queue.pop();
 		if next_task.is_none() == true {
 			if current_status != TaskStatus::TaskRunning && current_status != TaskStatus::TaskIdle {
-				debug!("Switch to idle task");
+				println!("Switch to idle task");
 				// current task isn't able to run and no other task available
 				// => switch to the idle task
 				next_task = Some(self.idle_task.clone());
@@ -129,11 +128,11 @@ impl Scheduler {
 				};
 
 				if current_status == TaskStatus::TaskRunning {
-					debug!("Add task {} to ready queue", old_id);
+					println!("Add task {} to ready queue", old_id);
 					self.current_task.borrow_mut().status = TaskStatus::TaskReady;
 					self.ready_queue.push(self.current_task.clone());
 				} else if current_status == TaskStatus::TaskFinished {
-					debug!("Task {} finished", old_id);
+					println!("Task {} finished", old_id);
 					self.current_task.borrow_mut().status = TaskStatus::TaskInvalid;
 					// release the task later, because the stack is required
 					// to call the function "switch"
