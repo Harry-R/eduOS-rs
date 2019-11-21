@@ -12,6 +12,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use scheduler::task::*;
 // use arch::switch;
 use logging::*;
+use arch::aarch64::irq;
 
 static NO_TASKS: AtomicU32 = AtomicU32::new(0);
 static TID_COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -79,7 +80,7 @@ impl Scheduler {
 			panic!("unable to terminate idle task");
 		}
 
-		self.reschedule();
+		irq::trigger_schedule();
 	}
 
 	pub fn get_current_taskid(&self) -> TaskId {
@@ -95,6 +96,7 @@ impl Scheduler {
 		// do we have finished tasks? => drop tasks => deallocate implicitly the stack
 		match self.finished_tasks.pop_front() {
 			Some(id) => {
+				println!("poped task from finish queue");
 				if self.tasks.remove(&id).is_none() == true {
 					println!("Unable to drop task {}", id);
 				}

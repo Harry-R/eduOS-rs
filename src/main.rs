@@ -18,14 +18,20 @@ use eduos_rs::arch::aarch64::task::leave_task;
 
 #[naked]
 extern "C" fn foo() {
-	/**
+	/// LR needs to be saved because of an unknown bug
+	let lr : u64;
+	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "memory" : "volatile"); }
+
+	/// Real function starts here
 	for _i in 0..2 {
 		println!("hello from task {}", scheduler::get_current_taskid());
 		// call scheduler (cooperative multitasking)
-		// irq::trigger_schedule();
-	} **/
+		irq::trigger_schedule();
+	}
 	println!("Leave foo!");
-	// unsafe { asm!("mov x30, 1073747100" :::: "volatile"); }
+
+	/// Reset LR to saved value
+	unsafe { asm!("mov x30, x7" : : "{x7}" (lr) :: )};
 	return;
 }
 
@@ -38,7 +44,7 @@ pub extern "C" fn main() {
 
 	scheduler::init();
 
-	for _i in 0..1 {
+	for _i in 0..2 {
 		scheduler::spawn(foo);
 	}
 

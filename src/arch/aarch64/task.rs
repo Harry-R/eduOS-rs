@@ -56,10 +56,9 @@ pub struct State {
 }
 
 pub extern "C" fn leave_task() {
-	println!("finish task {}", get_current_taskid());
+	println!("leave task {}", get_current_taskid());
 	do_exit();
 	loop {
-		println!("loop")
 	}
 }
 
