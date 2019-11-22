@@ -42,21 +42,21 @@ name = "bootloader"                 # The bootloader crate name
 target = "aarch64-bootloader.json"   # Target triple for compiling the bootloader
 
 # The development profile, used for `cargo build`.
-#[profile.debug]
-#opt-level = 1      # controls the `--opt-level` the compiler builds with
-#debug = true       # controls whether the compiler passes `-C debuginfo`
+[profile.dev]
+opt-level = 0      # controls the `--opt-level` the compiler builds with
+debug = true       # controls whether the compiler passes `-C debuginfo`
                    # a value of `true` is equivalent to `2`
-#rpath = false      # controls whether the compiler passes `-C rpath`
-#lto = false        # controls `-C lto` for binaries and staticlibs
-#debug-assertions = true # controls whether debug assertions are enabled
-#codegen-units = 1  # controls whether the compiler passes `-C codegen-units`
+rpath = false      # controls whether the compiler passes `-C rpath`
+lto = false        # controls `-C lto` for binaries and staticlibs
+debug-assertions = true # controls whether debug assertions are enabled
+codegen-units = 1  # controls whether the compiler passes `-C codegen-units`
                    # `codegen-units` is ignored when `lto = true`
 
 # The release profile, used for `cargo build --release`.
-#[profile.release]
-#opt-level = 3
-#debug = false
-#rpath = false
-#lto = true
-#debug-assertions = false
-#codegen-units = 1
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1

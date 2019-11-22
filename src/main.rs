@@ -20,7 +20,7 @@ use eduos_rs::arch::aarch64::task::leave_task;
 extern "C" fn foo() {
 	/// LR needs to be saved because of an unknown bug
 	let lr : u64;
-	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "memory" : "volatile"); }
+	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "x0" : "volatile"); }
 
 	/// Real function starts here
 	for _i in 0..2 {
@@ -43,6 +43,7 @@ pub extern "C" fn main() {
 	println!("Hello from eduOS-rs!");
 
 	scheduler::init();
+	irq::gic_irq_init();
 
 	for _i in 0..2 {
 		scheduler::spawn(foo);

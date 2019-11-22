@@ -11,6 +11,7 @@
 use core::mem::size_of;
 use scheduler::task::*;
 use scheduler::{do_exit,get_current_taskid};
+use arch::aarch64::irq;
 use consts::*;
 use logging::*;
 use compiler_builtins::mem::memset;
@@ -65,10 +66,9 @@ pub extern "C" fn leave_task() {
 extern "C" fn enter_task(func: extern fn()) {
 	println!("Enter function at 0x{:x}", func as usize);
 	let mut val: u64 = 0;
-	unsafe { asm!("mov x0, x30" : "={x0}"(val) :: "memory" : "volatile"); }
-    println!("{:x}", val);
+	unsafe { asm!("mov x0, x30" : "={x0}"(val) :: "x0" : "volatile"); }
 	func();
-	println!("leave function at 0x{:x}", func as usize);
+	println!("Leave function at 0x{:x}", func as usize);
 	leave_task();
 }
 
@@ -86,11 +86,10 @@ impl TaskFrame for Task {
 			let state: *mut State = stack as *mut State;
 			ptr::write_bytes(state, 0, 1);
 
-			//
-			(*state).elr_el1 = (leave_task as *const()) as u64;
+			(*state).elr_el1 = (enter_task as *const()) as u64; //(leave_task as *const()) as u64;
 			(*state).spsr_el1 = 0x205u64;
 			(*state).x0 = (func as *const()) as u64;
-			(*state).x30 = (enter_task as *const()) as u64;
+			(*state).x30 = (leave_task as *const()) as u64; //(enter_task as *const()) as u64;
 
 			println!("Set elr to 0x{:x} and spsr to 0x{:x}", (*state).elr_el1, (*state).spsr_el1);
 

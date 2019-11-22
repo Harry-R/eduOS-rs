@@ -66,7 +66,7 @@ const MAX_HANDLERS: u32 = 256;
 const RESCHED_INT: u32 = 1;
 
 // TODO: find out, what "EINVAL" is
-const EINVAL: u32 = 42;
+const EINVAL: i32 = 42;
 
 // This is dummy, has to be code pointer array -> Ignore first, maybe implement later,
 // if wee need more than one handler
@@ -79,30 +79,31 @@ extern "C" {
 
 /// triggers a reschedule, either by interrupt or by directly calling the scheduler
 pub fn trigger_schedule() {
-	// by interrupt
-	// gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
-	// by calling scheduler directly
-	unsafe { _reschedule(); }
+	println!("triggering schedule interrupt");
+ 	gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
+//	unsafe { _reschedule(); }
+	//println!("done");
+	loop {}
 }
 
 fn gicd_read(off: u64) -> u32 {
 	let value;
-	unsafe { asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICD_BASE +off as u64) : "memory")};
+	unsafe { asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICD_BASE + off as u64) : "memory" : "volatile")};
 	return value;
 }
 
 fn gicd_write(off: u64, value: u32) -> () {
-	unsafe { asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICD_BASE +off as u64) : "memory")};
+	unsafe { asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICD_BASE + off as u64) : "memory" : "volatile")};
 }
 
 fn gicc_read(off: u64) -> u32 {
 	let value;
-	unsafe{asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICC_BASE +off as u64) : "memory")};
+	unsafe{asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICC_BASE + off as u64) : "memory" : "volatile")};
 	return value;
 }
 
 fn gicc_write(off: u64, value: u32) {
-	unsafe{asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICC_BASE +off as u64) : "memory")};
+	unsafe{asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICC_BASE + off as u64) : "memory" : "volatile")};
 }
 
 
@@ -207,12 +208,12 @@ pub fn do_bad_mode(sp: usize, reason: i32){
 pub fn do_sync(state: *const State){
 	println!("do_sync");
 	unsafe { println!("{:?}", *state); }
-	let iar = gicc_read( GICC_IAR as u64);
+	let iar = gicc_read(GICC_IAR as u64);
 	let esr = read_esr();
 	println!("Exception Syndrome Register 0x{:x}", esr);
 	gicc_write(GICC_EOIR as u64, iar);
 	println!("error at 0x{:x}", read_elr());
-	do_error();
+	do_error(state);
 }
 
 fn read_elr() -> u64 {
@@ -253,8 +254,8 @@ fn do_fiq(state: *const State) -> usize{
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
 
-	println!("Receive fiq {}", vector);
-	unsafe { println!("{:?} 0x{:x}", *state, state as u64); }
+	//println!("Receive fiq {}", vector);
+	//unsafe { println!("{:?} 0x{:x}", *state, state as u64); }
 
 	let ret = if true /*vector == RESCHED_INT*/ {
 		call_scheduler()
@@ -263,16 +264,16 @@ fn do_fiq(state: *const State) -> usize{
 	};
 
 	gicc_write(GICC_EOIR as u64, iar);
-
+	println!("fiq ret");
 	ret
 }
 
 #[no_mangle]
-pub fn do_error() {
+pub fn do_error(_state: *const State) {
 	loop{}
 }
 
 #[no_mangle]
-fn call_scheduler() -> usize {
+pub fn call_scheduler() -> usize {
 	reschedule()
 }

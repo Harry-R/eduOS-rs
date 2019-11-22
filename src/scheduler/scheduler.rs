@@ -88,8 +88,7 @@ impl Scheduler {
 	}
 
 	pub fn get_current_stack(&self) -> usize {
-		let ptr = self.current_task.borrow().last_stack_pointer;
-		return ptr
+		self.current_task.borrow().last_stack_pointer
 	}
 
 	pub fn schedule(&mut self) -> usize {
