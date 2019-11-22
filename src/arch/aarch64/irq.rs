@@ -79,9 +79,9 @@ extern "C" {
 
 /// triggers a reschedule, either by interrupt or by directly calling the scheduler
 pub fn trigger_schedule() {
-	println!("triggering schedule interrupt");
+	println!("Triggering schedule");
  	gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
-//	unsafe { _reschedule(); }
+	//	unsafe { _reschedule(); }
 	//println!("done");
 	loop {}
 }
@@ -206,7 +206,7 @@ pub fn do_bad_mode(sp: usize, reason: i32){
 
 #[no_mangle]
 pub fn do_sync(state: *const State){
-	println!("do_sync");
+	println!("Receive synchronous interrupt");
 	unsafe { println!("{:?}", *state); }
 	let iar = gicc_read(GICC_IAR as u64);
 	let esr = read_esr();
@@ -230,12 +230,11 @@ fn read_esr() -> u64 {
 
 #[no_mangle]
 pub fn do_irq(state: *const State) -> usize {
-	println!("do irq");
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
 
 	println!("Receive irq {}", vector);
-	unsafe { println!("{:?}", *state); }
+	// unsafe { println!("{:?}", *state); }
 
 	let ret = if true /*vector == RESCHED_INT*/ {
         call_scheduler()
@@ -250,12 +249,10 @@ pub fn do_irq(state: *const State) -> usize {
 
 #[no_mangle]
 fn do_fiq(state: *const State) -> usize{
-	println!("do fiq");
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
-
-	//println!("Receive fiq {}", vector);
-	//unsafe { println!("{:?} 0x{:x}", *state, state as u64); }
+	println!("Receive fiq {}", vector);
+	// unsafe { println!("{:?}", *state); }
 
 	let ret = if true /*vector == RESCHED_INT*/ {
 		call_scheduler()
@@ -270,6 +267,9 @@ fn do_fiq(state: *const State) -> usize{
 
 #[no_mangle]
 pub fn do_error(_state: *const State) {
+	println!("UNHANDLED ERROR!");
+	println!("Current state:");
+	unsafe { println!("{:?}", *state); }
 	loop{}
 }
 
