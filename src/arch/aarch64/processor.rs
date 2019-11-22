@@ -9,12 +9,12 @@ pub fn halt() {
 }
 
 #[no_mangle]
-pub extern "C" fn shutdown() -> ! {
-	// TODO: implement
-	println!("UNIMPLEMENTED!");
-	loop{
-		halt();
-	};
+pub extern "C" fn shutdown(){
+	unsafe {_shutdown()}
+}
+
+extern "C" {
+	fn _shutdown();
 }
 
 
