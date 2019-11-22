@@ -27,6 +27,7 @@
 
 .global _start
 .global _reschedule
+.global _shutdown
 
 .macro ALIGN
 .align 4
@@ -306,3 +307,10 @@ PRINTC 0x42
     ventry el0_fiq_invalid          // FIQ 32-bit EL0
     ventry el0_error_invalid        // Error 32-bit EL0
     END vector_table
+
+.align 6
+_shutdown:
+      mov w0, 0x18
+      mov x1, #0x20000
+      add x1, x1, #0x26
+      hlt #0xF000
