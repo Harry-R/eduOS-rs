@@ -26,6 +26,7 @@
 .section ".text.boot"
 
 .global _start
+.global _shutdown
 
 _start:
     // read cpu id, stop slave cores
@@ -45,3 +46,9 @@ _start:
     b       init
     // for failsafe, halt this core too
     b       1b
+
+_shutdown:
+      mov w0, 0x18
+      mov x1, #0x20000
+      add x1, x1, #0x26
+      hlt #0xF000

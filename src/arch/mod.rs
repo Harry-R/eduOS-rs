@@ -29,7 +29,7 @@ pub use self::x86_64::{serial,processor};
 pub use self::wasm32::{serial};
 
 #[cfg(target_arch="aarch64")]
-pub use self::aarch64::{serial};
+pub use self::aarch64::{serial, processor};
 
 // Implementations for x86_64.
 #[cfg(target_arch="x86_64")]

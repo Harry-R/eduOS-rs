@@ -10,16 +10,15 @@ extern crate eduos_rs;
 
 use core::panic::PanicInfo;
 use core::ptr;
-// use eduos_rs::arch::processor::shutdown;
+use eduos_rs::arch::processor::shutdown;
 
 /// This is the main function called by `init()` function from boot.rs
 #[cfg(not(test))]
 #[no_mangle] // don't mangle the name of this function
 pub extern "C" fn main() -> () {
     println!("Hello world!");
-	loop{};
 	// shutdown system
-	// shutdown();
+	shutdown();
 }
 
 /// This function is called on panic.
