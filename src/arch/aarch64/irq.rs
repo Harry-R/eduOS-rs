@@ -269,7 +269,7 @@ fn do_fiq(state: *const State) -> usize{
 pub fn do_error(_state: *const State) {
 	println!("UNHANDLED ERROR!");
 	println!("Current state:");
-	unsafe { println!("{:?}", *state); }
+	unsafe { println!("{:?}", _state); }
 	loop{}
 }
 
