@@ -9,11 +9,8 @@ pub unsafe extern "C" fn init() -> ! {
     extern "Rust" {
         fn main() -> !;
         fn gic_irq_init();
-        fn timer_init();
     }
-
     gic_irq_init();
-    timer_init();
     main();
 }
 

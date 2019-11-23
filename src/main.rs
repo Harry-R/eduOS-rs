@@ -15,6 +15,7 @@ use eduos_rs::arch::processor::{shutdown,halt};
 use eduos_rs::scheduler;
 use eduos_rs::arch::aarch64::irq;
 use eduos_rs::arch::aarch64::task::leave_task;
+use eduos_rs::arch::aarch64::timer;
 
 #[naked]
 extern "C" fn foo() {
@@ -23,7 +24,7 @@ extern "C" fn foo() {
 	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "x0" : "volatile"); }
 
 	/// Real function starts here
-	for _i in 0..2 {
+	for _i in 0..5 {
 		println!("hello from task {}", scheduler::get_current_taskid());
 		// call scheduler (cooperative multitasking)
 		irq::trigger_schedule();
@@ -43,14 +44,16 @@ pub extern "C" fn main() {
 	println!("Hello from eduOS-rs!");
 
 	scheduler::init();
-	irq::gic_irq_init();
 
 	for _i in 0..2 {
 		scheduler::spawn(foo);
 	}
 
 	// call scheduler (cooperative multitasking)
-	irq::trigger_schedule();
+	// irq::trigger_schedule();
+	timer::set_tval(123456);
+	loop {}
+
 
 	println!("Shutdown system!");
 
