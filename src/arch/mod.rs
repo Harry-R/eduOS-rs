@@ -6,22 +6,22 @@
 // copied, modified, or distributed except according to those terms.
 
 // Export our platform-specific modules.
-#[cfg(target_arch="x86_64")]
-pub use self::x86_64::{serial,processor};
+#[cfg(target_arch = "x86_64")]
+pub use self::x86_64::{processor, serial};
 
 // Export our platform-specific modules.
-#[cfg(target_arch="x86_64")]
+#[cfg(target_arch = "x86_64")]
 pub use self::x86_64::switch::switch;
 
-#[cfg(target_arch="aarch64")]
-pub use self::aarch64::{serial, processor};
+#[cfg(target_arch = "aarch64")]
+pub use self::aarch64::{processor, serial};
 // #[cfg(target_arch="aarch64")]
 // pub use self::aarch64::switch::switch;
 
 // Implementations for x86_64.
-#[cfg(target_arch="x86_64")]
+#[cfg(target_arch = "x86_64")]
 pub mod x86_64;
 
 // Implementations for aarch64.
-#[cfg(target_arch="aarch64")]
+#[cfg(target_arch = "aarch64")]
 pub mod aarch64;

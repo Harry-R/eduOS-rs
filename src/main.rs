@@ -10,71 +10,71 @@
 extern crate eduos_rs;
 
 use core::panic::PanicInfo;
-use eduos_rs::arch::processor::{shutdown,halt};
-use eduos_rs::scheduler;
 use eduos_rs::arch::aarch64::irq;
 use eduos_rs::arch::aarch64::timer;
+use eduos_rs::arch::processor::{halt, shutdown};
+use eduos_rs::scheduler;
 
 #[naked]
 extern "C" fn foo() {
-	// LR needs to be saved because of an unknown bug
-	let lr : u64;
-	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "x0" : "volatile"); }
+    // LR needs to be saved because of an unknown bug
+    let lr: u64;
+    unsafe {
+        asm!("mov x0, x30" : "={x0}"(lr) :: "x0" : "volatile");
+    }
 
-	// Real function starts here
-	for _i in 0..5 {
-		println!("hello from task {}", scheduler::get_current_taskid());
-		// call scheduler (cooperative multitasking)
-		irq::trigger_schedule();
-	}
-	println!("Leave foo!");
+    // Real function starts here
+    for _i in 0..5 {
+        println!("hello from task {}", scheduler::get_current_taskid());
+        // call scheduler (cooperative multitasking)
+        irq::trigger_schedule();
+    }
+    println!("Leave foo!");
 
-	// Reset LR to saved value
-	unsafe { asm!("mov x30, x7" : : "{x7}" (lr) :: )};
-	return;
+    // Reset LR to saved value
+    unsafe { asm!("mov x30, x7" : : "{x7}" (lr) :: ) };
+    return;
 }
 
 /// This is the main function called by `init()` function from boot.rs
 #[cfg(not(test))]
 #[no_mangle] // don't mangle the name of this function
 pub extern "C" fn main() {
+    println!("Hello from eduOS-rs!");
 
-	println!("Hello from eduOS-rs!");
+    scheduler::init();
 
-	scheduler::init();
+    for _i in 0..2 {
+        scheduler::spawn(foo);
+    }
 
-	for _i in 0..2 {
-		scheduler::spawn(foo);
-	}
+    // call scheduler (cooperative multitasking)
+    // irq::trigger_schedule();
+    timer::set_tval(123456);
 
-	// call scheduler (cooperative multitasking)
-	// irq::trigger_schedule();
-	timer::set_tval(123456);
+    println!("Shutdown system!");
 
-
-	println!("Shutdown system!");
-
-	// shutdown system
-	shutdown();
+    // shutdown system
+    shutdown();
 }
 
 /// This function is called on panic.
 #[cfg(not(test))]
 #[panic_handler]
 pub fn panic(info: &PanicInfo) -> ! {
-	print!("[!!!PANIC!!!] ");
+    print!("[!!!PANIC!!!] ");
 
-	if let Some(location) = info.location() {
-		print!("{}:{}: ", location.file(), location.line());
-	}
+    if let Some(location) = info.location() {
+        print!("{}:{}: ", location.file(), location.line());
+    }
 
-	if let Some(message) = info.message() {
-		print!("{}", message);
-	}
+    if let Some(message) = info.message() {
+        print!("{}", message);
+    }
 
-	print!("\n");
+    print!("\n");
 
-	loop {
-		halt();
-	}
+    loop {
+        halt();
+    }
 }

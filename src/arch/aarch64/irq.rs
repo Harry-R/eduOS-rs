@@ -8,9 +8,9 @@
 
 #![allow(dead_code)]
 
-use scheduler::reschedule;
 use arch::aarch64::task::State;
 use arch::aarch64::timer;
+use scheduler::reschedule;
 
 // TODO enhancement: use aarch64 or cortex-a crate for register stuff
 
@@ -63,7 +63,7 @@ const GICC_CTLR_ACKCTL: u32 = (1 << 2);
 
 const MAX_HANDLERS: u32 = 256;
 const RESCHED_INT: u32 = 1;
-const EL1_PHYS_TIMER: u32  = 30;
+const EL1_PHYS_TIMER: u32 = 30;
 
 // TODO: find out, what "EINVAL" is
 const EINVAL: i32 = 42;
@@ -74,55 +74,62 @@ const IRQ_ROUTINES: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
 /// deceleration for assembly function, that initiates task switch
 extern "C" {
-	fn _reschedule();
+    fn _reschedule();
 }
 
 /// triggers a reschedule, either by interrupt or by directly calling the scheduler
 pub fn trigger_schedule() {
-	println!("Triggering schedule");
- 	gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
-	// unsafe { _reschedule(); }
-	println!("goto trigger loop!");
-	loop {}
+    println!("Triggering schedule");
+    gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
+    // unsafe { _reschedule(); }
+    println!("goto trigger loop!");
+    loop {}
 }
 
 fn gicd_read(off: u64) -> u32 {
-	let value;
-	unsafe { asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICD_BASE + off as u64) : "memory" : "volatile")};
-	return value;
+    let value;
+    unsafe {
+        asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICD_BASE + off as u64) : "memory" : "volatile")
+    };
+    return value;
 }
 
 fn gicd_write(off: u64, value: u32) -> () {
-	unsafe { asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICD_BASE + off as u64) : "memory" : "volatile")};
+    unsafe {
+        asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICD_BASE + off as u64) : "memory" : "volatile")
+    };
 }
 
 fn gicc_read(off: u64) -> u32 {
-	let value;
-	unsafe{asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICC_BASE + off as u64) : "memory" : "volatile")};
-	return value;
+    let value;
+    unsafe {
+        asm!("ldar w0, [x1]" : "=r"(value) : "{x1}"(GICC_BASE + off as u64) : "memory" : "volatile")
+    };
+    return value;
 }
 
 fn gicc_write(off: u64, value: u32) {
-	unsafe{asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICC_BASE + off as u64) : "memory" : "volatile")};
+    unsafe {
+        asm!("str w0, [x1]" : : "rZ" (value), "{x1}" (GICC_BASE + off as u64) : "memory" : "volatile")
+    };
 }
 
-
-fn unmask_interrupt(vector: u32) -> Result<(),()>{
+fn unmask_interrupt(vector: u32) -> Result<(), ()> {
     if vector >= (((gicd_read(GICD_TYPER as u64) & 0x1f) + 1) * 32) {
-		return Err(());
-	}
-	// TODO: Implement with spin crate
+        return Err(());
+    }
+    // TODO: Implement with spin crate
     // spinlock_irqsave_lock(&mask_lock);
     gic_set_enable(vector as u64, true);
     // spinlock_irqsave_unlock(&mask_lock);
-   Ok(())
+    Ok(())
 }
 
-fn mask_interrupt(vector: u32) -> Result<(),()> {
+fn mask_interrupt(vector: u32) -> Result<(), ()> {
     if vector >= (((gicd_read(GICD_TYPER as u64) & 0x1f) + 1) * 32) {
-		return Err(());
-	}
-	// TODO: Implement with spin crate
+        return Err(());
+    }
+    // TODO: Implement with spin crate
     // spinlock_irqsave_lock(&mask_lock);
     gic_set_enable(vector as u64, false);
     // spinlock_irqsave_unlock(&mask_lock);
@@ -133,173 +140,194 @@ fn mask_interrupt(vector: u32) -> Result<(),()> {
 /// @vector: IntID
 /// @enable: true for enable, false for disable
 fn gic_set_enable(vector: u64, enable: bool) {
-	if enable == true {
-		let regoff = GICD_ISENABLER + 4 * (vector / 32);
-		let val = gicd_read(regoff) | 1 << (vector % 32);
-		gicd_write(regoff, val);
-	} else {
-		let regoff = GICD_ICENABLER + 4 * (vector / 32);
-		gicd_write(regoff, gicd_read(regoff) | 1 << (vector % 32));
-	}
+    if enable == true {
+        let regoff = GICD_ISENABLER + 4 * (vector / 32);
+        let val = gicd_read(regoff) | 1 << (vector % 32);
+        gicd_write(regoff, val);
+    } else {
+        let regoff = GICD_ICENABLER + 4 * (vector / 32);
+        gicd_write(regoff, gicd_read(regoff) | 1 << (vector % 32));
+    }
 }
 
 /// Enable Interrupts
 #[no_mangle]
 pub fn irq_enable() {
     // Global enable signalling of interrupt from the cpu interface
-	gicc_write(GICC_CTLR as u64, (GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL) as u32);
+    gicc_write(
+        GICC_CTLR as u64,
+        (GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL) as u32,
+    );
 }
 
 fn gicd_enable() {
-	println!("global enable forwarding from gicd");
-	// Global enable forwarding interrupts from distributor to cpu interface
-	gicd_write(GICD_CTLR, (GICD_CTLR_ENABLEGRP0 | GICD_CTLR_ENABLEGRP1) as u32);
+    println!("global enable forwarding from gicd");
+    // Global enable forwarding interrupts from distributor to cpu interface
+    gicd_write(
+        GICD_CTLR,
+        (GICD_CTLR_ENABLEGRP0 | GICD_CTLR_ENABLEGRP1) as u32,
+    );
 }
 
 fn gicd_disable() {
-	// Global disable forwarding interrupts from distributor to cpu interface
-	gicd_write(GICD_CTLR, 0);
+    // Global disable forwarding interrupts from distributor to cpu interface
+    gicd_write(GICD_CTLR, 0);
 }
 
 fn gicc_enable() {
-	println!("global enable forwarding from gicc");
-	// Global enable signalling of interrupt from the cpu interface
-    gicc_write(GICC_CTLR, GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL);
+    println!("global enable forwarding from gicc");
+    // Global enable signalling of interrupt from the cpu interface
+    gicc_write(
+        GICC_CTLR,
+        GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL,
+    );
 }
 
 fn gicc_disable() {
-	// Global disable signalling of interrupt from the cpu interface
-	gicc_write(GICC_CTLR, 0);
+    // Global disable signalling of interrupt from the cpu interface
+    gicc_write(GICC_CTLR, 0);
 }
 
 /// Disable Interrupts
 pub fn irq_disable() {
-	// Global disable signalling of interrupt from the cpu interface
-	gicc_write(GICC_CTLR as u64, 0);
+    // Global disable signalling of interrupt from the cpu interface
+    gicc_write(GICC_CTLR as u64, 0);
 }
 
 fn gicc_set_priority(priority: u32) {
-	gicc_write(GICC_PMR, priority & 0xFF);
+    gicc_write(GICC_PMR, priority & 0xFF);
 }
 
 #[no_mangle]
 pub fn gic_irq_init() {
-	println!("initialize interrupt controller");
+    println!("initialize interrupt controller");
 
-	let mut current_el: u64;
-	unsafe { asm!("mrs $0, CurrentEL" : "=r" (current_el) :: "memory" : "volatile"); }
-	println!("Running in exception level {}", current_el >> 2);
+    let mut current_el: u64;
+    unsafe {
+        asm!("mrs $0, CurrentEL" : "=r" (current_el) :: "memory" : "volatile");
+    }
+    println!("Running in exception level {}", current_el >> 2);
 
-	gicc_disable();
-	gicd_disable();
+    gicc_disable();
+    gicd_disable();
 
-	let nr_irqs = ((gicd_read(GICD_TYPER) & 0x1f) + 1) * 32;
-	println!("Number of supported interrupts {}", nr_irqs);
+    let nr_irqs = ((gicd_read(GICD_TYPER) & 0x1f) + 1) * 32;
+    println!("Number of supported interrupts {}", nr_irqs);
 
-	irq_enable();
-	gicd_enable();
-	gicc_set_priority(0xF0);
-	gicc_enable();
+    irq_enable();
+    gicd_enable();
+    gicc_set_priority(0xF0);
+    gicc_enable();
 
-	let _ = unmask_interrupt(RESCHED_INT);
+    let _ = unmask_interrupt(RESCHED_INT);
 
     // enable interrupts, clear A, I, F flags
     unsafe { asm!("msr daifclr, 0b111" ::: "memory") };
 
-	println!("GIC initialized!");
+    println!("GIC initialized!");
 }
 
 /// dis / enable interrupts generated by EL1 physical timers
 pub fn unmask_cntp_el0(unmask: bool) {
-	if unmask {
-		let _ = unmask_interrupt(EL1_PHYS_TIMER);
-	} else {
-		let _ =  mask_interrupt(EL1_PHYS_TIMER);
-	}
+    if unmask {
+        let _ = unmask_interrupt(EL1_PHYS_TIMER);
+    } else {
+        let _ = mask_interrupt(EL1_PHYS_TIMER);
+    }
 }
 
 #[no_mangle]
 /// Called at unhandled exception
-pub fn do_bad_mode(sp: usize, reason: i32){
+pub fn do_bad_mode(sp: usize, reason: i32) {
+    println!(
+        "Receive unhandled exception - sp: 0x{:x} - reason:{}",
+        sp, reason
+    );
 
-	println!("Receive unhandled exception - sp: 0x{:x} - reason:{}", sp, reason);
-
-	loop {
-		// HALT;
-	}
+    loop {
+        // HALT;
+    }
 }
 
 #[no_mangle]
-pub fn do_sync(state: *const State){
-	println!("Receive synchronous interrupt");
-	unsafe { println!("{:?}", *state); }
-	let iar = gicc_read(GICC_IAR as u64);
-	let esr = read_esr();
-	println!("Exception Syndrome Register 0x{:x}", esr);
-	gicc_write(GICC_EOIR as u64, iar);
-	println!("error at 0x{:x}", read_elr());
-	do_error(state);
+pub fn do_sync(state: *const State) {
+    println!("Receive synchronous interrupt");
+    unsafe {
+        println!("{:?}", *state);
+    }
+    let iar = gicc_read(GICC_IAR as u64);
+    let esr = read_esr();
+    println!("Exception Syndrome Register 0x{:x}", esr);
+    gicc_write(GICC_EOIR as u64, iar);
+    println!("error at 0x{:x}", read_elr());
+    do_error(state);
 }
 
 fn read_elr() -> u64 {
-	let mut ret: u64;
-	unsafe { asm!("mrs $0, elr_el1" : "=r"(ret) :: "memory" : "volatile"); }
-	ret
+    let mut ret: u64;
+    unsafe {
+        asm!("mrs $0, elr_el1" : "=r"(ret) :: "memory" : "volatile");
+    }
+    ret
 }
 
 fn read_esr() -> u64 {
-	let mut val: u64;
-    unsafe { asm!("mrs $0, esr_el1" : "=r"(val) :: "memory" : "volatile"); }
+    let mut val: u64;
+    unsafe {
+        asm!("mrs $0, esr_el1" : "=r"(val) :: "memory" : "volatile");
+    }
     return val;
 }
 
 #[no_mangle]
 pub fn do_irq(_state: *const State) -> usize {
-	let iar = gicc_read(GICC_IAR as u64);
-	let vector = iar & 0x3ff;
+    let iar = gicc_read(GICC_IAR as u64);
+    let vector = iar & 0x3ff;
 
-	println!("Receive irq {}", vector);
-	// unsafe { println!("{:?}", *state); }
+    println!("Receive irq {}", vector);
+    // unsafe { println!("{:?}", *state); }
 
-	let ret = if true /*vector == RESCHED_INT*/ {
+    let ret = if true /*vector == RESCHED_INT*/ {
         call_scheduler()
     } else {
         0
     };
 
-	gicc_write(GICC_EOIR as u64, iar);
+    gicc_write(GICC_EOIR as u64, iar);
 
-	ret
+    ret
 }
 
 #[no_mangle]
-fn do_fiq(_state: *const State) -> usize{
-	let iar = gicc_read(GICC_IAR as u64);
-	let vector = iar & 0x3ff;
-	println!("Receive fiq {}", vector);
-	// unsafe { println!("{:?}", *state); }
+fn do_fiq(_state: *const State) -> usize {
+    let iar = gicc_read(GICC_IAR as u64);
+    let vector = iar & 0x3ff;
+    println!("Receive fiq {}", vector);
+    // unsafe { println!("{:?}", *state); }
 
-	let ret = if true /* vector == RESCHED_INT */{
-		timer::set_tval(123456);
-		call_scheduler()
-	} else {
-		0
-	};
+    let ret = if true
+    /* vector == RESCHED_INT */
+    {
+        timer::set_tval(123456);
+        call_scheduler()
+    } else {
+        0
+    };
 
-	gicc_write(GICC_EOIR as u64, iar);
-	println!("fiq ret");
-	ret
+    gicc_write(GICC_EOIR as u64, iar);
+    println!("fiq ret");
+    ret
 }
 
 #[no_mangle]
 pub fn do_error(state: *const State) {
-	println!("UNHANDLED ERROR!");
-	println!("Current state:");
-	println!("{:?}", state);
-	loop{}
+    println!("UNHANDLED ERROR!");
+    println!("Current state:");
+    println!("{:?}", state);
+    loop {}
 }
 
 #[no_mangle]
 pub fn call_scheduler() -> usize {
-	reschedule()
+    reschedule()
 }

@@ -7,18 +7,18 @@
 
 use scheduler::task::BOOT_STACK;
 
-extern {
-	pub fn main();
+extern "C" {
+    pub fn main();
 }
 
 #[cfg(not(test))]
 #[no_mangle]
 #[naked]
 pub unsafe extern "C" fn _start() {
-	// be sure that rsp is a valid stack pointer
-	asm!("mov $0, %rsp" :: "r"(BOOT_STACK.top()) :: "volatile");
+    // be sure that rsp is a valid stack pointer
+    asm!("mov $0, %rsp" :: "r"(BOOT_STACK.top()) :: "volatile");
 
-	main();
+    main();
 
-	loop {}
+    loop {}
 }

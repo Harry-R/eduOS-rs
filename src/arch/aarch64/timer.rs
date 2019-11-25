@@ -13,8 +13,8 @@ pub fn set_tval(tval: u32) {
     unmask_cntp_el0(false);
     // unmask timer interrupt, start timer
     let mask = 0b01;
-    unsafe { asm!("msr cntp_ctl_el0, x7" :: "{x7}"(mask) :"x7":)}
+    unsafe { asm!("msr cntp_ctl_el0, x7" :: "{x7}"(mask) :"x7":) }
     // set tval (time until timer triggers)
-	unsafe { asm!("msr cntp_tval_el0, x7" :: "{x7}"(tval) :"x7":)}
+    unsafe { asm!("msr cntp_tval_el0, x7" :: "{x7}"(tval) :"x7":) }
     unmask_cntp_el0(true);
 }

@@ -3,35 +3,37 @@
 /// An enum representing the available verbosity levels of the logger.
 #[derive(Copy, Clone)]
 pub enum LogLevel {
-	/// Disable all our put messages
-	///
-	/// Designates without information
-	DISABLED = 0,
-	/// The "error" level.
-	///
-	/// Designates very serious errors.
-	ERROR,
-	/// The "warn" level.
-	///
-	/// Designates hazardous situations.
-	WARNING,
-	/// The "info" level.
-	///
-	/// Designates useful information.
-	INFO,
-	// The "debug" level.
-	///
-	/// Designates lower priority information.
-	DEBUG
+    /// Disable all our put messages
+    ///
+    /// Designates without information
+    DISABLED = 0,
+    /// The "error" level.
+    ///
+    /// Designates very serious errors.
+    ERROR,
+    /// The "warn" level.
+    ///
+    /// Designates hazardous situations.
+    WARNING,
+    /// The "info" level.
+    ///
+    /// Designates useful information.
+    INFO,
+    // The "debug" level.
+    ///
+    /// Designates lower priority information.
+    DEBUG,
 }
 
 /// Data structures to filter kernel messages
 pub struct KernelLogger {
-	pub log_level: LogLevel,
+    pub log_level: LogLevel,
 }
 
 /// default logger to handle kernel messages
-pub const LOGGER: KernelLogger = KernelLogger { log_level: LogLevel::INFO };
+pub const LOGGER: KernelLogger = KernelLogger {
+    log_level: LogLevel::INFO,
+};
 
 /// Print formatted info text to our console, followed by a newline.
 macro_rules! info {
