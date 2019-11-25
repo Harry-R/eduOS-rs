@@ -344,7 +344,8 @@ fn do_fiq(_state: *const State) -> usize {
         0
     };
 
-    gicc_write(GICC_EOIR as u64, iar);
+    // for mysterious reasons iar is alwas 12 - "hardcode" 30 to unblock timer interrupt
+    gicc_write(GICC_EOIR as u64, 30);
     println!("fiq ret");
     ret
 }
