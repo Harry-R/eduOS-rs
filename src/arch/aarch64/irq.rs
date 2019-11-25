@@ -164,16 +164,6 @@ fn gic_set_enable(vector: u64, enable: bool) {
     }
 }
 
-/// Enable Interrupts at GICC level
-#[no_mangle]
-pub fn irq_enable() {
-    // Global enable signalling of interrupt from the cpu interface
-    gicc_write(
-        GICC_CTLR as u64,
-        (GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL) as u32,
-    );
-}
-
 /// Enable interrupts at GICD level
 fn gicd_enable() {
     println!("global enable forwarding from gicd");
@@ -206,12 +196,6 @@ fn gicc_disable() {
     gicc_write(GICC_CTLR, 0);
 }
 
-/// Disable Interrupts at GICC level
-pub fn irq_disable() {
-    // Global disable signalling of interrupt from the cpu interface
-    gicc_write(GICC_CTLR as u64, 0);
-}
-
 /// Set priority at GICC
 /// * `priority` - The priority to set (0-255)
 fn gicc_set_priority(priority: u32) {
@@ -238,7 +222,6 @@ pub fn gic_irq_init() {
     let nr_irqs = ((gicd_read(GICD_TYPER) & 0x1f) + 1) * 32;
     println!("Number of supported interrupts {}", nr_irqs);
 
-    irq_enable();
     gicd_enable();
     gicc_set_priority(0xF0);
     gicc_enable();
