@@ -10,20 +10,18 @@
 extern crate eduos_rs;
 
 use core::panic::PanicInfo;
-use core::ptr;
 use eduos_rs::arch::processor::{shutdown,halt};
 use eduos_rs::scheduler;
 use eduos_rs::arch::aarch64::irq;
-use eduos_rs::arch::aarch64::task::leave_task;
 use eduos_rs::arch::aarch64::timer;
 
 #[naked]
 extern "C" fn foo() {
-	/// LR needs to be saved because of an unknown bug
+	// LR needs to be saved because of an unknown bug
 	let lr : u64;
 	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "x0" : "volatile"); }
 
-	/// Real function starts here
+	// Real function starts here
 	for _i in 0..5 {
 		println!("hello from task {}", scheduler::get_current_taskid());
 		// call scheduler (cooperative multitasking)
@@ -31,7 +29,7 @@ extern "C" fn foo() {
 	}
 	println!("Leave foo!");
 
-	/// Reset LR to saved value
+	// Reset LR to saved value
 	unsafe { asm!("mov x30, x7" : : "{x7}" (lr) :: )};
 	return;
 }
@@ -52,7 +50,6 @@ pub extern "C" fn main() {
 	// call scheduler (cooperative multitasking)
 	// irq::trigger_schedule();
 	timer::set_tval(123456);
-	loop {}
 
 
 	println!("Shutdown system!");

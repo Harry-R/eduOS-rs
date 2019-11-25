@@ -11,10 +11,6 @@
 use core::mem::size_of;
 use scheduler::task::*;
 use scheduler::{do_exit,get_current_taskid};
-use arch::aarch64::irq;
-use consts::*;
-use logging::*;
-use compiler_builtins::mem::memset;
 use core::ptr;
 
 #[derive(Debug)]
@@ -65,8 +61,6 @@ pub extern "C" fn leave_task() {
 
 extern "C" fn enter_task(func: extern fn()) {
 	println!("Enter function at 0x{:x}", func as usize);
-	let mut val: u64 = 0;
-	unsafe { asm!("mov x0, x30" : "={x0}"(val) :: "x0" : "volatile"); }
 	func();
 	println!("Leave function at 0x{:x}", func as usize);
 	leave_task();

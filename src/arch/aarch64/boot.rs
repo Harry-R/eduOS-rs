@@ -1,5 +1,3 @@
-#![no_std]
-
 /// Some space for init stuff before calling `main()`.
 #[no_mangle]
 pub unsafe extern "C" fn init() -> ! {

@@ -8,8 +8,6 @@
 
 #![allow(dead_code)]
 
-use core::fmt;
-use logging::*;
 use scheduler::reschedule;
 use arch::aarch64::task::State;
 use arch::aarch64::timer;
@@ -72,7 +70,7 @@ const EINVAL: i32 = 42;
 
 // This is dummy, has to be code pointer array -> Ignore first, maybe implement later,
 // if wee need more than one handler
-const irq_routines: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
+const IRQ_ROUTINES: [i32; MAX_HANDLERS as usize] = [0; MAX_HANDLERS as usize];
 
 /// deceleration for assembly function, that initiates task switch
 extern "C" {
@@ -188,7 +186,7 @@ fn gicc_set_priority(priority: u32) {
 pub fn gic_irq_init() {
 	println!("initialize interrupt controller");
 
-	let mut current_el: u64 = 0;
+	let mut current_el: u64;
 	unsafe { asm!("mrs $0, CurrentEL" : "=r" (current_el) :: "memory" : "volatile"); }
 	println!("Running in exception level {}", current_el >> 2);
 
@@ -244,19 +242,19 @@ pub fn do_sync(state: *const State){
 }
 
 fn read_elr() -> u64 {
-	let mut ret: u64 = 0;
+	let mut ret: u64;
 	unsafe { asm!("mrs $0, elr_el1" : "=r"(ret) :: "memory" : "volatile"); }
 	ret
 }
 
 fn read_esr() -> u64 {
-	let mut val: u64 = 0;
+	let mut val: u64;
     unsafe { asm!("mrs $0, esr_el1" : "=r"(val) :: "memory" : "volatile"); }
     return val;
 }
 
 #[no_mangle]
-pub fn do_irq(state: *const State) -> usize {
+pub fn do_irq(_state: *const State) -> usize {
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
 
@@ -275,7 +273,7 @@ pub fn do_irq(state: *const State) -> usize {
 }
 
 #[no_mangle]
-fn do_fiq(state: *const State) -> usize{
+fn do_fiq(_state: *const State) -> usize{
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
 	println!("Receive fiq {}", vector);
@@ -294,10 +292,10 @@ fn do_fiq(state: *const State) -> usize{
 }
 
 #[no_mangle]
-pub fn do_error(_state: *const State) {
+pub fn do_error(state: *const State) {
 	println!("UNHANDLED ERROR!");
 	println!("Current state:");
-	unsafe { println!("{:?}", _state); }
+	println!("{:?}", state);
 	loop{}
 }
 
