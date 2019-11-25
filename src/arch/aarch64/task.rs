@@ -82,10 +82,10 @@ impl TaskFrame for Task {
 			ptr::write_bytes(state, 0, 1);
 
 			//
-			(*state).elr_el1 = (leave_task as *const()) as u64;
+			(*state).elr_el1 = (enter_task as *const()) as u64;
 			(*state).spsr_el1 = 0x205u64;
 			(*state).x0 = (func as *const()) as u64;
-			(*state).x30 = (enter_task as *const()) as u64;
+			(*state).x30 = (leave_task as *const()) as u64;
 
 			/* Set the task's stack pointer entry to the stack we have crafted right now. */
 			self.last_stack_pointer =  state as usize;

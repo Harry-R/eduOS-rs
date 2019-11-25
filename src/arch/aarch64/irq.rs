@@ -80,9 +80,9 @@ extern "C" {
 /// triggers a reschedule, either by interrupt or by directly calling the scheduler
 pub fn trigger_schedule() {
 	// by interrupt
-	// gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
+	gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
 	// by calling scheduler directly
-	unsafe { _reschedule(); }
+	// unsafe { _reschedule(); }
 }
 
 fn gicd_read(off: u64) -> u32 {
@@ -259,8 +259,8 @@ fn do_fiq(state: *const State) -> usize{
 	} else {
 		0
 	};
-
-	gicc_write(GICC_EOIR as u64, iar);
+	// for mysterious reasons iar is always 12, so ugly fix by hard coding 1 to eoir
+	gicc_write(GICC_EOIR as u64, 1);
 
 	ret
 }
