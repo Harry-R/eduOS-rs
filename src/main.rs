@@ -24,12 +24,10 @@ extern "C" fn foo() {
 
 	/// Real function starts here
 	for _i in 0..2 {
-		println!("hello from task {}", scheduler::get_current_taskid());
+		println!("Hello from task {}", scheduler::get_current_taskid());
 		// call scheduler (cooperative multitasking)
 		irq::trigger_schedule();
 	}
-	println!("Leave foo!");
-
 	/// Reset LR to saved value
 	unsafe { asm!("mov x30, x7" : : "{x7}" (lr) :: )};
 	return;
@@ -50,8 +48,6 @@ pub extern "C" fn main() {
 
 	// call scheduler (cooperative multitasking)
 	irq::trigger_schedule();
-
-	println!("Shutdown system!");
 
 	// shutdown system
 	shutdown();

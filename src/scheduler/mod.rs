@@ -40,7 +40,6 @@ pub fn reschedule() -> usize{
 
 /// Terminate the current running task
 pub fn do_exit() {
-	println!("do exit");
 	unsafe {
 		SCHEDULER.as_mut().unwrap().exit();
 	}

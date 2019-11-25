@@ -147,7 +147,6 @@ pub fn irq_enable() {
 }
 
 fn gicd_enable() {
-	println!("global enable forwarding from gicd");
 	// Global enable forwarding interrupts from distributor to cpu interface
 	gicd_write(GICD_CTLR, (GICD_CTLR_ENABLEGRP0 | GICD_CTLR_ENABLEGRP1) as u32);
 }
@@ -158,7 +157,6 @@ fn gicd_disable() {
 }
 
 fn gicc_enable() {
-	println!("global enable forwarding from gicc");
 	// Global enable signalling of interrupt from the cpu interface
     gicc_write(GICC_CTLR, GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL);
 }
@@ -181,7 +179,7 @@ fn gicc_set_priority(priority: u32) {
 #[no_mangle]
 pub fn gic_irq_init() {
 	irq_enable();
-	println!("initialize interrupt controller");
+	info!("Initialize interrupt controller");
 	gicd_enable();
 	gicc_set_priority(0xF0);
 	gicc_enable();

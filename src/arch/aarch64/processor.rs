@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #[no_mangle]
+use logging::*;
 
 pub fn halt() {
 	// TODO: implement halt for aarch64
@@ -10,6 +11,7 @@ pub fn halt() {
 
 #[no_mangle]
 pub extern "C" fn shutdown(){
+	info!("Shutdown system");
 	unsafe {_shutdown()}
 }
 
