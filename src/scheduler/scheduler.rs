@@ -17,6 +17,7 @@ use logging::*;
 static NO_TASKS: AtomicU32 = AtomicU32::new(0);
 static TID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
+/// Scheduler struct
 pub struct Scheduler {
     /// task id which is currently running
     current_task: Rc<RefCell<Task>>,
@@ -26,11 +27,13 @@ pub struct Scheduler {
     ready_queue: TaskQueue,
     /// queue of tasks, which are finished and can be released
     finished_tasks: VecDeque<TaskId>,
-    // map between task id and task controll block
+    /// map between task id and task control block
     tasks: BTreeMap<TaskId, Rc<RefCell<Task>>>,
 }
 
+/// Function implementation for scheduler
 impl Scheduler {
+    /// Create a new scheduler
     pub fn new() -> Scheduler {
         let tid = TaskId::from(TID_COUNTER.fetch_add(1, Ordering::SeqCst));
         let idle_task = Rc::new(RefCell::new(Task::new_idle(tid)));
@@ -55,6 +58,7 @@ impl Scheduler {
         }
     }
 
+    /// Spawn a new task and add it to the ready queue
     pub fn spawn(&mut self, func: extern "C" fn()) -> TaskId {
         // Create the new task.
         let tid = self.get_tid();
@@ -72,6 +76,7 @@ impl Scheduler {
         tid
     }
 
+    /// Change task status to TaskFinished
     pub fn exit(&mut self) {
         if self.current_task.borrow().status != TaskStatus::TaskIdle {
             println!("finish task with id {}", self.current_task.borrow().id);
@@ -83,14 +88,22 @@ impl Scheduler {
         irq::trigger_schedule();
     }
 
+    /// Return the current task's id
     pub fn get_current_taskid(&self) -> TaskId {
         self.current_task.borrow().id
     }
 
+    /// Return the current task's stack pointer
     pub fn get_current_stack(&self) -> usize {
         self.current_task.borrow().last_stack_pointer
     }
 
+    /// The scheduler's core functionality:
+    /// - drop task from finish queue
+    /// - determine the new task
+    /// - update task queues
+    /// - switch to new task, if there is none switch to idle task
+    /// - return the old stack pointer
     pub fn schedule(&mut self) -> usize {
         // do we have finished tasks? => drop tasks => deallocate implicitly the stack
         match self.finished_tasks.pop_front() {
@@ -160,6 +173,7 @@ impl Scheduler {
         }
     }
 
+    /// Public interface to initiate a reschedule
     pub fn reschedule(&mut self) -> usize {
         self.schedule()
     }

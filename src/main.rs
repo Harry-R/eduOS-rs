@@ -15,6 +15,7 @@ use eduos_rs::arch::aarch64::timer;
 use eduos_rs::arch::processor::{halt, shutdown};
 use eduos_rs::scheduler;
 
+/// Function for testing the scheduler
 #[naked]
 extern "C" fn foo() {
     // LR needs to be saved because of an unknown bug

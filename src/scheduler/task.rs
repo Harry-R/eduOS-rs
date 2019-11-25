@@ -58,6 +58,7 @@ pub struct Stack {
     buffer: [u8; STACK_SIZE],
 }
 
+/// Stack definition
 impl Stack {
     pub const fn new() -> Stack {
         Stack {
@@ -65,22 +66,26 @@ impl Stack {
         }
     }
 
+    /// Return pointer to stack top
     pub fn top(&self) -> usize {
         (&(self.buffer[STACK_SIZE - 16]) as *const _) as usize
     }
-
+    /// Return pointer to stack botttom
     pub fn bottom(&self) -> usize {
         (&(self.buffer[0]) as *const _) as usize
     }
 }
 
+/// New stack
 pub static mut BOOT_STACK: Stack = Stack::new();
 
+/// Task queue definition as doubly linked list
 pub struct TaskQueue {
     queue: DoublyLinkedList<Rc<RefCell<Task>>>,
 }
-
+/// The task queue implementation
 impl TaskQueue {
+    /// Create a new task queue
     pub fn new() -> TaskQueue {
         TaskQueue {
             queue: Default::default(),
@@ -127,7 +132,10 @@ pub struct Task {
     pub stack: *mut Stack,
 }
 
+/// The task implementation
 impl Task {
+    /// Create a new idle task
+    /// * `id` - The idle task's id
     pub fn new_idle(id: TaskId) -> Task {
         Task {
             id: id,
@@ -137,6 +145,9 @@ impl Task {
         }
     }
 
+    /// Create a new task
+    /// * `id` - `TaskId` the new task should have
+    /// * `status` - `TaskStatus` status the task should have
     pub fn new(id: TaskId, status: TaskStatus) -> Task {
         let stack = unsafe { alloc(Layout::new::<Stack>()) as *mut Stack };
 
@@ -151,12 +162,16 @@ impl Task {
     }
 }
 
+/// Task frame trait
 pub trait TaskFrame {
     /// Create the initial stack frame for a new task
     fn create_stack_frame(&mut self, func: extern "C" fn());
 }
 
+/// Drop implementation for Task
 impl Drop for Task {
+    /// Drops the task and deallocates the stack
+    /// * `self`: The task to drop
     fn drop(&mut self) {
         if unsafe { self.stack != &mut BOOT_STACK } {
             debug!(

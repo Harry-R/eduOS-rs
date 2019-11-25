@@ -47,6 +47,7 @@ pub fn get_current_taskid() -> task::TaskId {
     unsafe { SCHEDULER.as_ref().unwrap().get_current_taskid() }
 }
 
+/// Return current stack
 #[no_mangle]
 pub extern "C" fn get_current_stack() -> usize {
     unsafe { SCHEDULER.as_ref().unwrap().get_current_stack() }

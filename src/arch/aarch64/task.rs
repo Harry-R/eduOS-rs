@@ -13,6 +13,7 @@ use core::ptr;
 use scheduler::task::*;
 use scheduler::{do_exit, get_current_taskid};
 
+/// A struct to save the task's register state
 #[derive(Debug)]
 #[repr(C)]
 pub struct State {
@@ -52,12 +53,15 @@ pub struct State {
     x31: u64, // alias sp or xzr (depends on the instruction)
 }
 
+/// Call the scheduler's `do_exit` function, should not return
 pub extern "C" fn leave_task() {
     println!("leave task {}", get_current_taskid());
     do_exit();
     loop {}
 }
 
+/// Entry point for a task after creation, after `func()` returened, it calls `leave_function()`
+/// * `func` - Esxtern function to call
 extern "C" fn enter_task(func: extern "C" fn()) {
     println!("Enter function at 0x{:x}", func as usize);
     func();
@@ -66,7 +70,13 @@ extern "C" fn enter_task(func: extern "C" fn()) {
 }
 
 impl TaskFrame for Task {
-    // TODO: further changes for aarch64
+    /// Creates a stack frame for a new task
+    /// * `self`: The task to create a stack frame for
+    /// * `func`: Extern function
+    ///
+    /// - Create an aligned stack
+    /// - Save space for storing the task state
+    /// - Initiate the registers as if the task had been interrupted
     fn create_stack_frame(&mut self, func: extern "C" fn()) {
         unsafe {
             // create aligned stack
@@ -78,6 +88,7 @@ impl TaskFrame for Task {
             let state: *mut State = stack as *mut State;
             ptr::write_bytes(state, 0, 1);
 
+            // register state initialization depends, if scheduling works with interrupts
             (*state).elr_el1 = (enter_task as *const ()) as u64; //(leave_task as *const()) as u64;
             (*state).spsr_el1 = 0x205u64;
             (*state).x0 = (func as *const ()) as u64;

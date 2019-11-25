@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #[no_mangle]
 
+/// halt function
 pub fn halt() {
     // TODO: implement halt for aarch64
     unsafe {
@@ -8,6 +9,7 @@ pub fn halt() {
     }
 }
 
+/// Interface for shutdown function
 #[no_mangle]
 pub extern "C" fn shutdown() {
     unsafe { _shutdown() }
