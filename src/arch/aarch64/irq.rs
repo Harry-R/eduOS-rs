@@ -247,12 +247,12 @@ pub fn do_irq(state: *const State) -> usize {
 
 #[no_mangle]
 fn do_fiq(state: *const State) -> usize{
-	println!("do fiq");
+	info!("Receive fiq");
 	let iar = gicc_read(GICC_IAR as u64);
 	let vector = iar & 0x3ff;
 
-	println!("Receive fiq {}", vector);
-	unsafe { println!("{:?} 0x{:x}", *state, state as u64); }
+	// println!("Receive fiq {}", vector);
+	// unsafe { println!("{:?} 0x{:x}", *state, state as u64); }
 
 	let ret = if true /*vector == RESCHED_INT*/ {
 		call_scheduler()
