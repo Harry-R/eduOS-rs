@@ -30,4 +30,4 @@ impl fmt::Write for ComPort {
 }
 
 /// Our primary serial port.
-pub static COM1: Mutex<ComPort> = Mutex::new(ComPort::new(0x09000000));
+pub static mut COM1:ComPort = ComPort::new(0x09000000);

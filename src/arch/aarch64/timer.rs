@@ -10,8 +10,6 @@ use super::irq::unmask_cntp_el0;
 /// Initialize physical EL1 timer
 /// * `tval` - ticks until the timer should trigger
 pub fn set_tval(tval: u32) {
-    println!("------------- Initialize timer ---------");
-
     unmask_cntp_el0(false);
     // unmask timer interrupt, start timer
     let mask = 0b01;

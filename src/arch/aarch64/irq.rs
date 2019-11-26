@@ -338,7 +338,7 @@ fn do_fiq(_state: *const State) -> usize {
     let ret = if true
     /* vector == RESCHED_INT */
     {
-        timer::set_tval(52345678);
+        timer::set_tval(123456);
         call_scheduler()
     } else {
         0
@@ -346,7 +346,7 @@ fn do_fiq(_state: *const State) -> usize {
 
     // for mysterious reasons iar is alwas 12 - "hardcode" 30 to unblock timer interrupt
     gicc_write(GICC_EOIR as u64, 30);
-    println!("fiq ret");
+    // println!("fiq ret");
     ret
 }
 
