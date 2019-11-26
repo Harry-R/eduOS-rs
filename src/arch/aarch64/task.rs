@@ -12,6 +12,7 @@ use core::mem::size_of;
 use core::ptr;
 use scheduler::task::*;
 use scheduler::{do_exit, get_current_taskid};
+use logging::*;
 
 /// A struct to save the task's register state
 #[derive(Debug)]
@@ -63,9 +64,9 @@ pub extern "C" fn leave_task() {
 /// Entry point for a task after creation, after `func()` returened, it calls `leave_function()`
 /// * `func` - Esxtern function to call
 extern "C" fn enter_task(func: extern "C" fn()) {
-    println!("Enter function at 0x{:x}", func as usize);
+    info!("Enter function at 0x{:x}", func as usize);
     func();
-    println!("Leave function at 0x{:x}", func as usize);
+    info!("Leave function at 0x{:x}", func as usize);
     leave_task();
 }
 
@@ -94,7 +95,7 @@ impl TaskFrame for Task {
             (*state).x0 = (func as *const ()) as u64;
             (*state).x30 = (leave_task as *const ()) as u64; //(enter_task as *const()) as u64;
 
-            println!(
+           debug!(
                 "Set elr to 0x{:x} and spsr to 0x{:x}",
                 (*state).elr_el1,
                 (*state).spsr_el1
@@ -103,7 +104,7 @@ impl TaskFrame for Task {
             /* Set the task's stack pointer entry to the stack we have crafted right now. */
             self.last_stack_pointer = state as usize;
 
-            println!("last stack pointer set to 0x{:x}", self.last_stack_pointer);
+            debug!("Last stack pointer set to 0x{:x}", self.last_stack_pointer);
         }
     }
 }

@@ -66,10 +66,6 @@ ldr     \xreg, [sp], #8
 
 
 _start:
-
-    // debug output A
-    PRINTC 0x41
-
     // read cpu id, stop slave cores
     mrs     x1, mpidr_el1
     and     x1, x1, #3
@@ -86,9 +82,6 @@ _start:
     /* Set exception table */
     ldr x0, =vector_table
     msr vbar_el1, x0
-
-    // debug output B
-    PRINTC 0x42
 
     // jump to Rust code, should not return
     b       init
@@ -196,8 +189,6 @@ _start:
           /* call cleanup code */
           // Cleanup not necessary here
           // bl finish_task_switch
-
-PRINTC 0x42
 
 1:        trap_exit
           eret

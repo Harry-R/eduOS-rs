@@ -108,7 +108,6 @@ impl Scheduler {
         // do we have finished tasks? => drop tasks => deallocate implicitly the stack
         match self.finished_tasks.pop_front() {
             Some(id) => {
-                println!("poped task from finish queue");
                 if self.tasks.remove(&id).is_none() == true {
                     println!("Unable to drop task {}", id);
                 }
@@ -146,11 +145,11 @@ impl Scheduler {
                 };
 
                 if current_status == TaskStatus::TaskRunning {
-                    println!("Add task {} to ready queue", old_id);
+                    debug!("Add task {} to ready queue", old_id);
                     self.current_task.borrow_mut().status = TaskStatus::TaskReady;
                     self.ready_queue.push(self.current_task.clone());
                 } else if current_status == TaskStatus::TaskFinished {
-                    println!("Task {} finished", old_id);
+                    debug!("Task {} finished", old_id);
                     self.current_task.borrow_mut().status = TaskStatus::TaskInvalid;
                     // release the task later, because the stack is required
                     // to call the function "switch"
@@ -158,7 +157,7 @@ impl Scheduler {
                     self.finished_tasks.push_back(old_id);
                 }
 
-                println!(
+                info!(
                     "Switching task from {} to {} (stack {:#X} => {:#X})",
                     old_id,
                     new_id,
