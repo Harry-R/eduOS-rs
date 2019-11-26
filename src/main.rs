@@ -23,7 +23,7 @@ extern "C" fn foo() {
 	unsafe { asm!("mov x0, x30" : "={x0}"(lr) :: "memory" : "volatile"); }
 
 	/// Real function starts here
-	for _i in 0..2 {
+	for _i in 0..5 {
 		println!("Hello from task {}", scheduler::get_current_taskid());
 		// call scheduler (cooperative multitasking)
 		irq::trigger_schedule();

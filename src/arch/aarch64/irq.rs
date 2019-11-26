@@ -260,7 +260,7 @@ fn do_fiq(state: *const State) -> usize{
 		0
 	};
 	// for mysterious reasons iar is always 12, so ugly fix by hard coding 1 to eoir
-	gicc_write(GICC_EOIR as u64, 1);
+	gicc_write(GICC_EOIR as u64, iar);
 
 	ret
 }
