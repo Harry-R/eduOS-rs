@@ -338,7 +338,7 @@ fn do_fiq(_state: *const State) -> usize {
     let ret = if true
     /* vector == RESCHED_INT */
     {
-        timer::set_tval(123456);
+        timer::set_tval(52345678);
         call_scheduler()
     } else {
         0

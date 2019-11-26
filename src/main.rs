@@ -25,8 +25,8 @@ extern "C" fn foo() {
     }
 
     // Real function starts here
-    for _i in 0..500 {
-        println!("hello from task {}", scheduler::get_current_taskid());
+    loop {
+        // println!("hello from task {}", scheduler::get_current_taskid());
         // call scheduler (cooperative multitasking)
         // irq::trigger_schedule();
     }
@@ -45,7 +45,7 @@ pub extern "C" fn main() {
 
     scheduler::init();
 
-    for _i in 0..2 {
+    for _i in 0..4 {
         scheduler::spawn(foo);
     }
 
