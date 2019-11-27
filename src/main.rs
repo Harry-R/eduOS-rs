@@ -25,7 +25,7 @@ extern "C" fn foo() {
     }
 
     // Real function starts here
-    for _i in 0..500 {
+    for _i in 0..50 {
         println!("hello from task {}", scheduler::get_current_taskid());
         // call scheduler (cooperative multitasking)
         // irq::trigger_schedule();
@@ -51,10 +51,7 @@ pub extern "C" fn main() {
 
     // call scheduler (cooperative multitasking)
     // irq::trigger_schedule();
-    timer::set_tval(1234567);
-    loop {
-
-    }
+    timer::set_tval(0);
     println!("Shutdown system!");
 
     // shutdown system
