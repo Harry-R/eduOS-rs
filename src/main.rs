@@ -30,7 +30,7 @@ extern "C" fn foo() {
         // call scheduler (cooperative multitasking)
         // irq::trigger_schedule();
     }
-    println!("Leave foo!");
+    // println!("Leave foo!");
 
     // Reset LR to saved value
     unsafe { asm!("mov x30, x7" : : "{x7}" (lr) :: ) };

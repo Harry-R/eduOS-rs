@@ -79,7 +79,7 @@ impl Scheduler {
     /// Change task status to TaskFinished
     pub fn exit(&mut self) {
         if self.current_task.borrow().status != TaskStatus::TaskIdle {
-            println!("finish task with id {}", self.current_task.borrow().id);
+            info!("finish task with id {}", self.current_task.borrow().id);
             self.current_task.borrow_mut().status = TaskStatus::TaskFinished;
         } else {
             panic!("unable to terminate idle task");

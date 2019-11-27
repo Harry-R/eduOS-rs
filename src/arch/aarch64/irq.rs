@@ -80,9 +80,10 @@ extern "C" {
 
 /// Triggers a reschedule, either by interrupt or by directly calling the scheduler
 pub fn trigger_schedule() {
-    println!("Triggering schedule");
+    // println!("Triggering schedule");
     gicd_write(GICD_SGIR, (2 << 24) | RESCHED_INT);
     // unsafe { _reschedule(); }
+
     println!("goto trigger loop!");
     loop {}
 }

@@ -56,7 +56,7 @@ pub struct State {
 
 /// Call the scheduler's `do_exit` function, should not return
 pub extern "C" fn leave_task() {
-    println!("leave task {}", get_current_taskid());
+    // println!("leave task {}", get_current_taskid());
     do_exit();
     loop {}
 }
@@ -66,7 +66,7 @@ pub extern "C" fn leave_task() {
 extern "C" fn enter_task(func: extern "C" fn()) {
     info!("Enter function at 0x{:x}", func as usize);
     func();
-    info!("Leave function at 0x{:x}", func as usize);
+    // info!("Leave function at 0x{:x}", func as usize);
     leave_task();
 }
 
