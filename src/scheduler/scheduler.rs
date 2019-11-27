@@ -129,7 +129,7 @@ impl Scheduler {
         let mut next_task = self.ready_queue.pop();
         if next_task.is_none() == true {
             if current_status != TaskStatus::TaskRunning && current_status != TaskStatus::TaskIdle {
-                println!("Switch to idle task");
+                info!("Switch to idle task");
                 // current task isn't able to run and no other task available
                 // => switch to the idle task
                 next_task = Some(self.idle_task.clone());
