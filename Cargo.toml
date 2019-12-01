@@ -22,8 +22,8 @@ git = "https://github.com/Harry-R/rust-aarch64.git"
 branch = "eduos"
 default-features = false
 
-[patch."https://github.com/Harry-R/rust-aarch64.git"]
-aarch64 = {path = "../rust-aarch64"}
+# [patch."https://github.com/Harry-R/rust-aarch64.git"]
+# aarch64 = {path = "../rust-aarch64"}
 
 [package.metadata.cargo-xbuild]
 memcpy = true
