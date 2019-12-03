@@ -186,8 +186,7 @@ fn gicc_enable() {
     // Global enable signalling of interrupt from the cpu interface
     gicc_write(
         GICC_CTLR,
-        GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN | GICC_CTLR_ACKCTL,
-    );
+        GICC_CTLR_ENABLEGRP0 | GICC_CTLR_ENABLEGRP1 | GICC_CTLR_FIQEN);
 }
 
 /// Disable interrupts at GICC level
