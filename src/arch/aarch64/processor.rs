@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #[no_mangle]
+use logging::*;
 
 /// halt function
 pub fn halt() {
@@ -12,6 +13,7 @@ pub fn halt() {
 /// Interface for shutdown function
 #[no_mangle]
 pub extern "C" fn shutdown() {
+    info!{"Shutdown system!"}
     unsafe { _shutdown() }
 }
 

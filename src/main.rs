@@ -52,7 +52,6 @@ pub extern "C" fn main() {
     // call scheduler (cooperative multitasking)
     // irq::trigger_schedule();
     timer::set_tval(0);
-    println!("Shutdown system!");
 
     // shutdown system
     shutdown();
